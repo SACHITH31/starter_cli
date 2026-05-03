@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-// This is called a shebang.
-// It helps when your CLI is installed globally later.
-
 const inquirer = require("inquirer").default;
 const fs = require("fs");
 const path = require("path");
@@ -16,21 +13,27 @@ inquirer
     {
       name: "frontend",
       message: "Choose frontend:",
-      type: "list",
-      choices: ["None", "React", "HTML"],
-      default: "None",
+      type: "rawlist",
+      choices: [
+        "HTML / CSS / JavaScript",
+        "React.js (Vite)",
+        "None"
+      ],
+      default: 3,
     },
     {
       name: "backend",
       message: "Choose backend:",
-      type: "list",
-      choices: ["None", "Node", "Express"],
-      default: "None",
+      type: "rawlist",
+      choices: [
+        "Node.js (Express)",
+        "None"
+      ],
+      default: 2,
     },
   ])
   .then((answers) => {
     const projectPath = path.join(process.cwd(), answers.projectName);
-    const backend = answers.backend.toLowerCase();
 
     if (fs.existsSync(projectPath)) {
       console.log("\nA project with this name already exists.");
@@ -39,45 +42,51 @@ inquirer
 
     fs.mkdirSync(projectPath);
 
-    if (answers.frontend !== "None") {
-      fs.mkdirSync(path.join(projectPath, "client"));
-    }
-
-    if (backend !== "none") {
-      fs.mkdirSync(path.join(projectPath, "server"));
-    }
-
     fs.writeFileSync(
       path.join(projectPath, ".gitignore"),
-      "node_modules\n.env",
+      "node_modules\n.env"
     );
 
     fs.writeFileSync(
       path.join(projectPath, "README.md"),
-      `# ${answers.projectName}`,
+      `# ${answers.projectName}`
     );
 
     if (answers.frontend !== "None") {
-      const clientTemplate = fs.readFileSync(
-        path.join(process.cwd(), "templates", "client", "package.json"),
-        "utf-8",
-      );
-
-      fs.writeFileSync(
-        path.join(projectPath, "client", "package.json"),
-        clientTemplate,
-      );
+      fs.mkdirSync(path.join(projectPath, "client"));
     }
 
-    if (backend !== "none") {
-      const serverTemplate = fs.readFileSync(
-        path.join(process.cwd(), "templates", "server", "index.js"),
-        "utf-8",
+    if (answers.backend !== "None") {
+      fs.mkdirSync(path.join(projectPath, "server"));
+    }
+
+    if (answers.frontend === "1. HTML / CSS / JavaScript") {
+      fs.writeFileSync(
+        path.join(projectPath, "client", "index.html"),
+        `<!DOCTYPE html>
+<html>
+<head>
+  <title>${answers.projectName}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Hello World</h1>
+
+  <script src="script.js"></script>
+</body>
+</html>`
       );
 
       fs.writeFileSync(
-        path.join(projectPath, "server", "index.js"),
-        serverTemplate,
+        path.join(projectPath, "client", "style.css"),
+        `body {
+  font-family: Arial, sans-serif;
+}`
+      );
+
+      fs.writeFileSync(
+        path.join(projectPath, "client", "script.js"),
+        `console.log("JavaScript connected");`
       );
     }
 

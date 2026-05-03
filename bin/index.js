@@ -28,11 +28,38 @@ inquirer
     }
   ])
   .then((answers) => {
-    const projectPath = path.join(process.cwd(), answers.projectName)
+  const projectPath = path.join(process.cwd(), answers.projectName)
 
-    fs.mkdirSync(projectPath)
-    fs.mkdirSync(path.join(projectPath, "client"))
-    fs.mkdirSync(path.join(projectPath, "server"))
+  fs.mkdirSync(projectPath)
+  fs.mkdirSync(path.join(projectPath, "client"))
+  fs.mkdirSync(path.join(projectPath, "server"))
 
-    console.log("\nProject folder created successfully!")
-  })
+  fs.writeFileSync(
+    path.join(projectPath, ".gitignore"),
+    "node_modules\n.env"
+  )
+
+  fs.writeFileSync(
+    path.join(projectPath, "README.md"),
+    `# ${answers.projectName}`
+  )
+
+  fs.writeFileSync(
+    path.join(projectPath, "server", "index.js"),
+    'console.log("Server running")'
+  )
+
+  fs.writeFileSync(
+    path.join(projectPath, "client", "package.json"),
+    JSON.stringify(
+      {
+        name: "client",
+        version: "1.0.0"
+      },
+      null,
+      2
+    )
+  )
+
+  console.log("\nProject created successfully!")
+})

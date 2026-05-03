@@ -44,22 +44,25 @@ inquirer
     `# ${answers.projectName}`
   )
 
-  fs.writeFileSync(
-    path.join(projectPath, "server", "index.js"),
-    'console.log("Server running")'
-  )
+  const serverTemplate = fs.readFileSync(
+  path.join(process.cwd(), "templates", "server", "index.js"),
+  "utf-8"
+)
 
-  fs.writeFileSync(
-    path.join(projectPath, "client", "package.json"),
-    JSON.stringify(
-      {
-        name: "client",
-        version: "1.0.0"
-      },
-      null,
-      2
-    )
-  )
+const clientTemplate = fs.readFileSync(
+  path.join(process.cwd(), "templates", "client", "package.json"),
+  "utf-8"
+)
+
+fs.writeFileSync(
+  path.join(projectPath, "server", "index.js"),
+  serverTemplate
+)
+
+fs.writeFileSync(
+  path.join(projectPath, "client", "package.json"),
+  clientTemplate
+)
 
   console.log("\nProject created successfully!")
 })

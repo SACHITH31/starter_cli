@@ -8,7 +8,9 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-// starter --help and starter --version
+// -----------------------------
+// starter --help and --version
+// -----------------------------
 const packageJson = require("../package.json");
 
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
@@ -17,10 +19,16 @@ starter - project scaffolding CLI
 
 Usage:
   starter
+  starter my-app
+  starter my-app --react --node
+  starter my-app --html
 
 Options:
   --help, -h       Show help
   --version, -v    Show version
+  --react          Use React.js (Vite)
+  --html           Use HTML / CSS / JavaScript
+  --node           Use Node.js (Express)
 
 What it can create:
   • HTML / CSS / JavaScript starter
@@ -35,7 +43,27 @@ if (process.argv.includes("--version") || process.argv.includes("-v")) {
   process.exit(0);
 }
 
-const cliProjectName = process.argv[2];
+// -----------------------------
+// CLI flags
+// -----------------------------
+const cliProjectName =
+  process.argv[2] && !process.argv[2].startsWith("-")
+    ? process.argv[2]
+    : null;
+
+const useReact = process.argv.includes("--react");
+const useHtml = process.argv.includes("--html");
+const useNode = process.argv.includes("--node");
+
+// -----------------------------
+// Resolve CLI-selected frontend/backend
+// -----------------------------
+let cliFrontend = null;
+let cliBackend = null;
+
+if (useReact) cliFrontend = "React.js (Vite)";
+if (useHtml) cliFrontend = "HTML / CSS / JavaScript";
+if (useNode) cliBackend = "Node.js (Express)";
 
 // -----------------------------
 // Helper: copy template files
@@ -75,6 +103,7 @@ inquirer
       type: "rawlist",
       choices: ["HTML / CSS / JavaScript", "React.js (Vite)", "None"],
       default: 2,
+      when: !cliFrontend,
     },
     {
       name: "backend",
@@ -82,12 +111,30 @@ inquirer
       type: "rawlist",
       choices: ["Node.js (Express)", "None"],
       default: 1,
+      when: !cliBackend,
     },
   ])
   .then((answers) => {
     if (cliProjectName) {
       answers.projectName = cliProjectName;
     }
+
+    if (cliFrontend) {
+      answers.frontend = cliFrontend;
+    }
+
+    if (cliBackend) {
+      answers.backend = cliBackend;
+    }
+
+    if (!answers.frontend) {
+      answers.frontend = "None";
+    }
+
+    if (!answers.backend) {
+      answers.backend = "None";
+    }
+
     const projectPath = path.join(process.cwd(), answers.projectName);
 
     // -----------------------------
@@ -108,12 +155,12 @@ inquirer
     // -----------------------------
     fs.writeFileSync(
       path.join(projectPath, ".gitignore"),
-      "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage",
+      "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage"
     );
 
     fs.writeFileSync(
       path.join(projectPath, "README.md"),
-      `# ${answers.projectName}`,
+      `# ${answers.projectName}`
     );
 
     // =====================================================
@@ -127,14 +174,12 @@ inquirer
       console.log("\nSetting up backend...");
 
       try {
-        // Initialize npm
         execSync("npm init -y", {
           cwd: serverPath,
           stdio: "inherit",
           shell: process.env.ComSpec,
         });
 
-        // Update package.json scripts
         const pkgPath = path.join(serverPath, "package.json");
 
         if (fs.existsSync(pkgPath)) {
@@ -150,7 +195,6 @@ inquirer
           console.log("✅ Scripts added to package.json");
         }
 
-        // Install backend dependencies
         execSync("npm install express cors dotenv", {
           cwd: serverPath,
           stdio: "inherit",
@@ -163,10 +207,9 @@ inquirer
           shell: process.env.ComSpec,
         });
 
-        // Create backend starter file
         copyTemplate(
-          path.join(process.cwd(), "templates", "server", "index.js"),
-          path.join(serverPath, "index.js"),
+          path.join(__dirname, "..", "templates", "server", "index.js"),
+          path.join(serverPath, "index.js")
         );
       } catch (error) {
         console.log("\n❌ Backend setup failed.");
@@ -185,7 +228,6 @@ inquirer
 
       console.log("\nSetting up HTML / CSS / JavaScript frontend...");
 
-      // index.html
       fs.writeFileSync(
         path.join(clientPath, "index.html"),
         `<!DOCTYPE html>
@@ -204,10 +246,9 @@ inquirer
 
   <script src="script.js"></script>
 </body>
-</html>`,
+</html>`
       );
 
-      // style.css
       fs.writeFileSync(
         path.join(clientPath, "style.css"),
         `body {
@@ -222,19 +263,15 @@ inquirer
   display: inline-block;
   padding: 20px;
   border-radius: 8px;
-}`,
+}`
       );
 
-      // Backend-connected frontend
       if (answers.backend === "Node.js (Express)") {
         copyTemplate(
-          path.join(process.cwd(), "templates", "html", "script.js"),
-          path.join(clientPath, "script.js"),
+          path.join(__dirname, "..", "templates", "html", "script.js"),
+          path.join(clientPath, "script.js")
         );
-      }
-
-      // Standalone frontend
-      else {
+      } else {
         fs.writeFileSync(
           path.join(clientPath, "script.js"),
           `const statusEl = document.getElementById("status");
@@ -243,13 +280,13 @@ const messageEl = document.getElementById("message");
 statusEl.textContent = "Standalone";
 statusEl.style.color = "green";
 
-messageEl.textContent = "No backend selected. Frontend is ready.";`,
+messageEl.textContent = "No backend selected. Frontend is ready.";`
         );
       }
     }
 
     // =====================================================
-    // FRONTEND SETUP - REACT (VITE)
+    // FRONTEND SETUP - REACT
     // =====================================================
     else if (answers.frontend === "React.js (Vite)") {
       const clientPath = path.join(projectPath, "client");
@@ -257,14 +294,12 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`,
       console.log("\nScaffolding React project...");
 
       try {
-        // Create React app
         execSync("npm create vite@latest client --yes -- --template react", {
           cwd: projectPath,
           stdio: ["ignore", "pipe", "pipe"],
           shell: process.env.ComSpec,
         });
 
-        // Install dependencies
         console.log("Installing React dependencies...");
 
         execSync("npm install", {
@@ -275,11 +310,10 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`,
 
         console.log("✅ React installation complete!");
 
-        // Replace App.jsx only if backend exists
         if (answers.backend === "Node.js (Express)") {
           copyTemplate(
-            path.join(process.cwd(), "templates", "react", "App.jsx"),
-            path.join(clientPath, "src", "App.jsx"),
+            path.join(__dirname, "..", "templates", "react", "App.jsx"),
+            path.join(clientPath, "src", "App.jsx")
           );
         }
       } catch (error) {

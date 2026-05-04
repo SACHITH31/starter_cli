@@ -15,9 +15,19 @@ A simple CLI tool to quickly create full stack starter projects.
 npm install
 node bin/index.js
 
-
 After that:
 
-```bash
 git add .
 git commit -m "Add README"
+```
+
+```bash
+shortcuts:
+- starter
+- starter my-app
+- starter my-app --react
+- starter my-app --html
+- starter my-app --react --node
+- starter my-app --html --node
+- starter --help
+- starter --version

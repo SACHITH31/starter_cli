@@ -1,0 +1,11 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 40px;
+  text-align: center;
+}
+
+#response-box {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+}

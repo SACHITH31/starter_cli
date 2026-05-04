@@ -1,11 +1,15 @@
 {
-  "name": "starter_cli",
+  "name": "stack-starter-cli",
   "version": "1.0.0",
   "description": "CLI to generate frontend and backend starter projects",
   "main": "bin/index.js",
   "bin": {
-    "starter": "./bin/index.js"
+    "stack-starter": "./bin/index.js"
   },
+  "files": [
+    "bin",
+    "templates"
+  ],
   "scripts": {
     "start": "node bin/index.js"
   },
@@ -17,8 +21,8 @@
     "react",
     "express"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "SACHITH KASA",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "inquirer": "^13.4.2"

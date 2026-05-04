@@ -23,11 +23,11 @@ git commit -m "Add README"
 
 ```bash
 shortcuts:
-- starter
-- starter my-app
-- starter my-app --react
-- starter my-app --html
-- starter my-app --react --node
-- starter my-app --html --node
-- starter --help
-- starter --version
+- stack-starter
+- stack-starter my-app
+- stack-starter my-app --react
+- stack-starter my-app --html
+- stack-starter my-app --react --node
+- stack-starter my-app --html --node
+- stack-starter --help
+- stack-starter --version

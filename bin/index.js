@@ -8,6 +8,33 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
+// starter --help and starter --version
+const packageJson = require("../package.json");
+
+if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  console.log(`
+starter - project scaffolding CLI
+
+Usage:
+  starter
+
+Options:
+  --help, -h       Show help
+  --version, -v    Show version
+
+What it can create:
+  • HTML / CSS / JavaScript starter
+  • React.js (Vite) starter
+  • Node.js (Express) backend
+`);
+  process.exit(0);
+}
+
+if (process.argv.includes("--version") || process.argv.includes("-v")) {
+  console.log(packageJson.version);
+  process.exit(0);
+}
+
 // -----------------------------
 // Helper: copy template files
 // -----------------------------
@@ -72,12 +99,12 @@ inquirer
     // -----------------------------
     fs.writeFileSync(
       path.join(projectPath, ".gitignore"),
-      "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage"
+      "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage",
     );
 
     fs.writeFileSync(
       path.join(projectPath, "README.md"),
-      `# ${answers.projectName}`
+      `# ${answers.projectName}`,
     );
 
     // =====================================================
@@ -130,7 +157,7 @@ inquirer
         // Create backend starter file
         copyTemplate(
           path.join(process.cwd(), "templates", "server", "index.js"),
-          path.join(serverPath, "index.js")
+          path.join(serverPath, "index.js"),
         );
       } catch (error) {
         console.log("\n❌ Backend setup failed.");
@@ -168,7 +195,7 @@ inquirer
 
   <script src="script.js"></script>
 </body>
-</html>`
+</html>`,
       );
 
       // style.css
@@ -186,14 +213,14 @@ inquirer
   display: inline-block;
   padding: 20px;
   border-radius: 8px;
-}`
+}`,
       );
 
       // Backend-connected frontend
       if (answers.backend === "Node.js (Express)") {
         copyTemplate(
           path.join(process.cwd(), "templates", "html", "script.js"),
-          path.join(clientPath, "script.js")
+          path.join(clientPath, "script.js"),
         );
       }
 
@@ -207,7 +234,7 @@ const messageEl = document.getElementById("message");
 statusEl.textContent = "Standalone";
 statusEl.style.color = "green";
 
-messageEl.textContent = "No backend selected. Frontend is ready.";`
+messageEl.textContent = "No backend selected. Frontend is ready.";`,
         );
       }
     }
@@ -243,7 +270,7 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`
         if (answers.backend === "Node.js (Express)") {
           copyTemplate(
             path.join(process.cwd(), "templates", "react", "App.jsx"),
-            path.join(clientPath, "src", "App.jsx")
+            path.join(clientPath, "src", "App.jsx"),
           );
         }
       } catch (error) {

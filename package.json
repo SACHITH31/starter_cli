@@ -1,15 +1,22 @@
 {
   "name": "starter_cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "CLI to generate frontend and backend starter projects",
   "main": "bin/index.js",
   "bin": {
-    "starter_cli": "./bin/index.js"
+    "starter": "./bin/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node bin/index.js"
   },
-  "keywords": [],
+  "keywords": [
+    "cli",
+    "starter",
+    "scaffold",
+    "node",
+    "react",
+    "express"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

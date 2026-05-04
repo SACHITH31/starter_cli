@@ -9,6 +9,14 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 // -----------------------------
+// Helper: copy template files
+// -----------------------------
+function copyTemplate(source, destination) {
+  const content = fs.readFileSync(source, "utf-8");
+  fs.writeFileSync(destination, content);
+}
+
+// -----------------------------
 // Ask user for project details
 // -----------------------------
 inquirer
@@ -16,6 +24,17 @@ inquirer
     {
       name: "projectName",
       message: "Enter your project name:",
+      validate(input) {
+        if (!input.trim()) {
+          return "Project name cannot be empty.";
+        }
+
+        if (!/^[a-zA-Z0-9_-]+$/.test(input)) {
+          return "Use only letters, numbers, hyphen (-), or underscore (_).";
+        }
+
+        return true;
+      },
     },
     {
       name: "frontend",
@@ -31,12 +50,6 @@ inquirer
       choices: ["Node.js (Express)", "None"],
       default: 1,
     },
-//     {
-//   name: "initGit",
-//   message: "Initialize git repository?",
-//   type: "confirm",
-//   default: true,
-// }
   ])
   .then((answers) => {
     const projectPath = path.join(process.cwd(), answers.projectName);
@@ -55,11 +68,11 @@ inquirer
     fs.mkdirSync(projectPath);
 
     // -----------------------------
-    // Create base files
+    // Base project files
     // -----------------------------
     fs.writeFileSync(
       path.join(projectPath, ".gitignore"),
-      "node_modules\n.env"
+      "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage"
     );
 
     fs.writeFileSync(
@@ -77,65 +90,53 @@ inquirer
 
       console.log("\nSetting up backend...");
 
-      // Initialize npm inside server folder
-      execSync("npm init -y", {
-        cwd: serverPath,
-        stdio: "inherit",
-        shell: process.env.ComSpec,
-      });
+      try {
+        // Initialize npm
+        execSync("npm init -y", {
+          cwd: serverPath,
+          stdio: "inherit",
+          shell: process.env.ComSpec,
+        });
 
-      // Inject useful scripts immediately
-      const pkgPath = path.join(serverPath, "package.json");
+        // Update package.json scripts
+        const pkgPath = path.join(serverPath, "package.json");
 
-      if (fs.existsSync(pkgPath)) {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+        if (fs.existsSync(pkgPath)) {
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
-        pkg.scripts = {
-          start: "node index.js",
-          dev: "nodemon index.js",
-        };
+          pkg.scripts = {
+            start: "node index.js",
+            dev: "nodemon index.js",
+          };
 
-        fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
-        console.log("✅ Scripts injected into package.json");
+          console.log("✅ Scripts added to package.json");
+        }
+
+        // Install backend dependencies
+        execSync("npm install express cors dotenv", {
+          cwd: serverPath,
+          stdio: "inherit",
+          shell: process.env.ComSpec,
+        });
+
+        execSync("npm install -D nodemon", {
+          cwd: serverPath,
+          stdio: "inherit",
+          shell: process.env.ComSpec,
+        });
+
+        // Create backend starter file
+        copyTemplate(
+          path.join(process.cwd(), "templates", "server", "index.js"),
+          path.join(serverPath, "index.js")
+        );
+      } catch (error) {
+        console.log("\n❌ Backend setup failed.");
+        console.log("Check npm installation or internet connection.");
+        return;
       }
-
-      // Install backend dependencies
-      execSync("npm install express cors dotenv", {
-        cwd: serverPath,
-        stdio: "inherit",
-        shell: process.env.ComSpec,
-      });
-
-      execSync("npm install -D nodemon", {
-        cwd: serverPath,
-        stdio: "inherit",
-        shell: process.env.ComSpec,
-      });
-
-      // Create starter backend file
-      fs.writeFileSync(
-        path.join(serverPath, "index.js"),
-        `const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.send("Server is running and connected to Frontend!");
-});
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});
-`
-      );
     }
 
     // =====================================================
@@ -146,7 +147,7 @@ app.listen(PORT, () => {
 
       fs.mkdirSync(clientPath);
 
-      console.log("\nSetting up HTML/JS frontend...");
+      console.log("\nSetting up HTML / CSS / JavaScript frontend...");
 
       // index.html
       fs.writeFileSync(
@@ -159,10 +160,10 @@ app.listen(PORT, () => {
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Frontend Status: <span id="status">Connecting...</span></h1>
+  <h1>Frontend Status: <span id="status">Loading...</span></h1>
 
   <div id="response-box" style="padding: 20px; border: 1px solid #ccc; margin-top: 20px;">
-    Backend Message: <strong id="message">Waiting for server...</strong>
+    Backend Message: <strong id="message">Please wait...</strong>
   </div>
 
   <script src="script.js"></script>
@@ -174,45 +175,41 @@ app.listen(PORT, () => {
       fs.writeFileSync(
         path.join(clientPath, "style.css"),
         `body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: Arial, sans-serif;
   padding: 40px;
-  background-color: #f4f4f4;
   text-align: center;
+  background: #f5f5f5;
 }
 
 #response-box {
   background: white;
   display: inline-block;
+  padding: 20px;
   border-radius: 8px;
 }`
       );
 
-      // script.js
-      // If backend exists, this will connect automatically.
-      fs.writeFileSync(
-        path.join(clientPath, "script.js"),
-        `const messageEl = document.getElementById("message");
-const statusEl = document.getElementById("status");
+      // Backend-connected frontend
+      if (answers.backend === "Node.js (Express)") {
+        copyTemplate(
+          path.join(process.cwd(), "templates", "html", "script.js"),
+          path.join(clientPath, "script.js")
+        );
+      }
 
-fetch("http://localhost:5000/")
-  .then((res) => {
-    if (res.ok) return res.text();
-    throw new Error("Network response was not ok");
-  })
-  .then((data) => {
-    statusEl.textContent = "Online";
-    statusEl.style.color = "green";
-    messageEl.textContent = data;
-    console.log("Success:", data);
-  })
-  .catch((err) => {
-    statusEl.textContent = "Offline";
-    statusEl.style.color = "red";
-    messageEl.textContent = "Could not connect to backend (is it running?)";
-    console.error("Error:", err);
-  });
-`
-      );
+      // Standalone frontend
+      else {
+        fs.writeFileSync(
+          path.join(clientPath, "script.js"),
+          `const statusEl = document.getElementById("status");
+const messageEl = document.getElementById("message");
+
+statusEl.textContent = "Standalone";
+statusEl.style.color = "green";
+
+messageEl.textContent = "No backend selected. Frontend is ready.";`
+        );
+      }
     }
 
     // =====================================================
@@ -223,75 +220,75 @@ fetch("http://localhost:5000/")
 
       console.log("\nScaffolding React project...");
 
-      // Create Vite React project
-      execSync("npm create vite@latest client --yes -- --template react", {
-        cwd: projectPath,
-        stdio: ["ignore", "pipe", "pipe"],
-        shell: process.env.ComSpec,
-      });
+      try {
+        // Create React app
+        execSync("npm create vite@latest client --yes -- --template react", {
+          cwd: projectPath,
+          stdio: ["ignore", "pipe", "pipe"],
+          shell: process.env.ComSpec,
+        });
 
-      // Install dependencies
-      console.log("Installing React dependencies (this may take a minute)...");
+        // Install dependencies
+        console.log("Installing React dependencies...");
 
-      execSync("npm install", {
-        cwd: clientPath,
-        stdio: "inherit",
-        shell: process.env.ComSpec,
-      });
+        execSync("npm install", {
+          cwd: clientPath,
+          stdio: "inherit",
+          shell: process.env.ComSpec,
+        });
 
-      console.log("✅ React installation complete!");
+        console.log("✅ React installation complete!");
 
-      // Only overwrite App.jsx if backend also exists
-      if (answers.backend === "Node.js (Express)") {
-        fs.writeFileSync(
-          path.join(clientPath, "src", "App.jsx"),
-          `import { useEffect, useState } from "react";
-
-function App() {
-  const [message, setMessage] = useState("Connecting to backend...");
-
-  useEffect(() => {
-    fetch("http://localhost:5000/")
-      .then((res) => res.text())
-      .then((data) => {
-        setMessage(data);
-      })
-      .catch(() => {
-        setMessage("Could not connect to backend");
-      });
-  }, []);
-
-  return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>React Frontend Connected</h1>
-      <p>{message}</p>
-    </div>
-  );
-}
-
-export default App;
-`
-        );
+        // Replace App.jsx only if backend exists
+        if (answers.backend === "Node.js (Express)") {
+          copyTemplate(
+            path.join(process.cwd(), "templates", "react", "App.jsx"),
+            path.join(clientPath, "src", "App.jsx")
+          );
+        }
+      } catch (error) {
+        console.log("\n❌ React setup failed.");
+        console.log("Check npm installation or internet connection.");
+        return;
       }
     }
 
     // =====================================================
-    // FINAL SUCCESS MESSAGE
+    // FINAL INSTRUCTIONS
     // =====================================================
     console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
-    console.log(`\nNext steps:`);
 
-    if (answers.backend !== "None") {
-      console.log(`1. cd ${answers.projectName}/server`);
-      console.log(`2. npm run dev`);
-    }
+    if (
+      answers.frontend === "HTML / CSS / JavaScript" &&
+      answers.backend === "Node.js (Express)"
+    ) {
+      console.log("\nRun backend:");
+      console.log(`cd ${answers.projectName}/server`);
+      console.log("npm run dev");
 
-    if (answers.frontend === "HTML / CSS / JavaScript") {
-      console.log(`3. Open ${answers.projectName}/client/index.html in your browser`);
-    }
+      console.log("\nThen open frontend:");
+      console.log(`${answers.projectName}/client/index.html`);
+    } else if (
+      answers.frontend === "React.js (Vite)" &&
+      answers.backend === "Node.js (Express)"
+    ) {
+      console.log("\nRun backend:");
+      console.log(`cd ${answers.projectName}/server`);
+      console.log("npm run dev");
 
-    if (answers.frontend === "React.js (Vite)") {
-      console.log(`3. cd ${answers.projectName}/client`);
-      console.log(`4. npm run dev`);
+      console.log("\nOpen another terminal and run frontend:");
+      console.log(`cd ${answers.projectName}/client`);
+      console.log("npm run dev");
+    } else if (answers.frontend === "HTML / CSS / JavaScript") {
+      console.log("\nOpen frontend:");
+      console.log(`${answers.projectName}/client/index.html`);
+    } else if (answers.frontend === "React.js (Vite)") {
+      console.log("\nRun frontend:");
+      console.log(`cd ${answers.projectName}/client`);
+      console.log("npm run dev");
+    } else if (answers.backend === "Node.js (Express)") {
+      console.log("\nRun backend:");
+      console.log(`cd ${answers.projectName}/server`);
+      console.log("npm run dev");
     }
   });

@@ -40,12 +40,12 @@ inquirer
     // Create Base Files
     fs.writeFileSync(
       path.join(projectPath, ".gitignore"),
-      "node_modules\n.env"
+      "node_modules\n.env",
     );
 
     fs.writeFileSync(
       path.join(projectPath, "README.md"),
-      `# ${answers.projectName}`
+      `# ${answers.projectName}`,
     );
 
     // --- BACKEND LOGIC ---
@@ -55,12 +55,12 @@ inquirer
       fs.mkdirSync(serverPath);
 
       console.log("\nSetting up backend...");
-      
+
       // 1. Initialize npm
       execSync("npm init -y", {
         cwd: serverPath,
         stdio: "inherit",
-        shell: process.env.ComSpec
+        shell: process.env.ComSpec,
       });
 
       // 2. IMMEDIATELY Inject the scripts into package.json
@@ -68,8 +68,8 @@ inquirer
       if (fs.existsSync(pkgPath)) {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
         pkg.scripts = {
-          "start": "node index.js",
-          "dev": "nodemon index.js"
+          start: "node index.js",
+          dev: "nodemon index.js",
         };
         fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
         console.log("✅ Scripts injected into package.json");
@@ -79,13 +79,13 @@ inquirer
       execSync("npm install express cors dotenv", {
         cwd: serverPath,
         stdio: "inherit",
-        shell: process.env.ComSpec
+        shell: process.env.ComSpec,
       });
 
       execSync("npm install -D nodemon", {
         cwd: serverPath,
         stdio: "inherit",
-        shell: process.env.ComSpec
+        shell: process.env.ComSpec,
       });
 
       // 4. Create the server file
@@ -108,7 +108,7 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(\`Server running on port \${PORT}\`);
-});`
+});`,
       );
     }
 
@@ -117,7 +117,7 @@ app.listen(PORT, () => {
       const clientPath = path.join(projectPath, "client");
       fs.mkdirSync(clientPath);
 
-      console.log("Setting up HTML/JS frontend...");
+      console.log("\n  Setting up HTML/JS frontend...");
 
       // index.html
       fs.writeFileSync(
@@ -137,7 +137,7 @@ app.listen(PORT, () => {
 
   <script src="script.js"></script>
 </body>
-</html>`
+</html>`,
       );
 
       // style.css
@@ -153,7 +153,7 @@ app.listen(PORT, () => {
   background: white;
   display: inline-block;
   border-radius: 8px;
-}`
+}`,
       );
 
       // script.js (Connection logic)
@@ -178,19 +178,44 @@ fetch("http://localhost:5000/")
     statusEl.style.color = "red";
     messageEl.textContent = "Could not connect to backend (is it running?)";
     console.error("Error:", err);
-  });`
+  });`,
       );
     } else if (answers.frontend === "React.js (Vite)") {
-      console.log("\nSetting up React with Vite...");
-      execSync("npm create vite@latest client -- --template react", {
+      const clientPath = path.join(projectPath, "client");
+      
+      console.log("\n🚀 Setting up React with Vite (Fully Automated)...");
+
+      // The secret weapon: stdio: ["ignore", "pipe", "pipe"]
+      // This detaches the keyboard input from the Vite command and hides its output.
+      // When Vite tries to ask a question, it gets no response, defaults to "No", and moves on!
+      execSync("npm create vite@latest client --yes -- --template react", {
         cwd: projectPath,
-        stdio: "inherit",
+        stdio: ["ignore", "pipe", "pipe"], // <--- THIS IS THE MAGIC FIX
+        shell: process.env.ComSpec
+      });
+
+      console.log("📦 Installing dependencies for you...");
+      execSync("npm install", {
+        cwd: clientPath,
+        stdio: "inherit", // Kept as 'inherit' so you can still see the npm loading bar
         shell: process.env.ComSpec
       });
     }
 
+    // console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
+    // console.log(`\nNext steps:`);
+    // if (answers.backend !== "None") console.log(`1. cd ${answers.projectName}/server && npm run dev`);
+    // if (answers.frontend !== "None") console.log(`2. Open ${answers.projectName}/client/index.html in your browser`);
+
     console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
     console.log(`\nNext steps:`);
-    if (answers.backend !== "None") console.log(`1. cd ${answers.projectName}/server && npm run dev`);
-    if (answers.frontend !== "None") console.log(`2. Open ${answers.projectName}/client/index.html in your browser`);
+    if (answers.backend !== "None") {
+      console.log(`1. cd ${answers.projectName}/server`);
+      console.log(`2. npm run dev`);
+    }
+    if (answers.frontend !== "None") {
+      console.log(
+        `3. Open ${answers.projectName}/client/index.html in your browser`,
+      );
+    }
   });

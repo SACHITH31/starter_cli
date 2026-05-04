@@ -182,24 +182,27 @@ fetch("http://localhost:5000/")
       );
     } else if (answers.frontend === "React.js (Vite)") {
       const clientPath = path.join(projectPath, "client");
-      
-      console.log("\n🚀 Setting up React with Vite (Fully Automated)...");
 
-      // The secret weapon: stdio: ["ignore", "pipe", "pipe"]
-      // This detaches the keyboard input from the Vite command and hides its output.
-      // When Vite tries to ask a question, it gets no response, defaults to "No", and moves on!
+      console.log("\n🚀 Scaffolding React project...");
+
+      // 1. Create the files (Silently skipping Vite's internal install prompt)
       execSync("npm create vite@latest client --yes -- --template react", {
         cwd: projectPath,
-        stdio: ["ignore", "pipe", "pipe"], // <--- THIS IS THE MAGIC FIX
-        shell: process.env.ComSpec
+        stdio: ["ignore", "pipe", "pipe"], // This forces Vite to finish quickly
+        shell: process.env.ComSpec,
       });
 
-      console.log("📦 Installing dependencies for you...");
+      // 2. WE run the install (This is your "Yes")
+      console.log(
+        "📦 Installing React dependencies (this may take a minute)...",
+      );
       execSync("npm install", {
         cwd: clientPath,
-        stdio: "inherit", // Kept as 'inherit' so you can still see the npm loading bar
-        shell: process.env.ComSpec
+        stdio: "inherit", // This shows the actual progress bar to the user
+        shell: process.env.ComSpec,
       });
+
+      console.log("✅ React installation complete!");
     }
 
     // console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
@@ -209,13 +212,20 @@ fetch("http://localhost:5000/")
 
     console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
     console.log(`\nNext steps:`);
+
     if (answers.backend !== "None") {
       console.log(`1. cd ${answers.projectName}/server`);
       console.log(`2. npm run dev`);
     }
-    if (answers.frontend !== "None") {
+
+    if (answers.frontend === "HTML / CSS / JavaScript") {
       console.log(
         `3. Open ${answers.projectName}/client/index.html in your browser`,
       );
+    }
+
+    if (answers.frontend === "React.js (Vite)") {
+      console.log(`3. cd ${answers.projectName}/client`);
+      console.log(`4. npm run dev`);
     }
   });

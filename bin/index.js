@@ -35,6 +35,8 @@ if (process.argv.includes("--version") || process.argv.includes("-v")) {
   process.exit(0);
 }
 
+const cliProjectName = process.argv[2];
+
 // -----------------------------
 // Helper: copy template files
 // -----------------------------
@@ -51,12 +53,16 @@ inquirer
     {
       name: "projectName",
       message: "Enter your project name:",
+      default: cliProjectName || undefined,
+      when: !cliProjectName,
       validate(input) {
-        if (!input.trim()) {
+        const projectName = cliProjectName || input;
+
+        if (!projectName.trim()) {
           return "Project name cannot be empty.";
         }
 
-        if (!/^[a-zA-Z0-9_-]+$/.test(input)) {
+        if (!/^[a-zA-Z0-9_-]+$/.test(projectName)) {
           return "Use only letters, numbers, hyphen (-), or underscore (_).";
         }
 
@@ -79,6 +85,9 @@ inquirer
     },
   ])
   .then((answers) => {
+    if (cliProjectName) {
+      answers.projectName = cliProjectName;
+    }
     const projectPath = path.join(process.cwd(), answers.projectName);
 
     // -----------------------------

@@ -10,7 +10,7 @@ const net = require("net");
 const { execSync } = require("child_process");
 
 // -----------------------------
-// starter --help and --version
+// Help / Version
 // -----------------------------
 const packageJson = require("../package.json");
 
@@ -34,11 +34,6 @@ Options:
   --node           Use Node.js (Express)
   --port           Custom backend port
   --pm             Package manager (npm, yarn, pnpm)
-
-What it can create:
-  • HTML / CSS / JavaScript starter
-  • React.js (Vite) starter
-  • Node.js (Express) backend
 `);
   process.exit(0);
 }
@@ -67,7 +62,7 @@ const pmIndex = process.argv.indexOf("--pm");
 const cliPackageManager = pmIndex !== -1 ? process.argv[pmIndex + 1] : null;
 
 // -----------------------------
-// Resolve CLI-selected frontend/backend
+// Resolve frontend/backend
 // -----------------------------
 let cliFrontend = null;
 let cliBackend = null;
@@ -76,8 +71,30 @@ if (useReact) cliFrontend = "React.js (Vite)";
 if (useHtml) cliFrontend = "HTML / CSS / JavaScript";
 if (useNode) cliBackend = "Node.js (Express)";
 
+// if user explicitly chooses only frontend
+if ((useReact || useHtml) && !useNode) {
+  cliBackend = "None";
+}
+
+// if user explicitly chooses only backend
+if (useNode && !useReact && !useHtml) {
+  cliFrontend = "None";
+}
+
 // -----------------------------
-// Helper: copy template files
+// Early duplicate folder check
+// -----------------------------
+if (cliProjectName) {
+  const earlyProjectPath = path.join(process.cwd(), cliProjectName);
+
+  if (fs.existsSync(earlyProjectPath)) {
+    console.log("\nA project with this name already exists.");
+    process.exit(0);
+  }
+}
+
+// -----------------------------
+// Helper: copy template
 // -----------------------------
 function copyTemplate(source, destination) {
   const content = fs.readFileSync(source, "utf-8");
@@ -85,7 +102,7 @@ function copyTemplate(source, destination) {
 }
 
 // -----------------------------
-// Helper: check package manager
+// Helper: package manager installed?
 // -----------------------------
 function isPackageManagerInstalled(pm) {
   try {
@@ -100,20 +117,31 @@ function isPackageManagerInstalled(pm) {
 }
 
 // -----------------------------
-// Helper: check port free
+// Early package manager check
+// -----------------------------
+if (cliPackageManager) {
+  if (!["npm", "yarn", "pnpm"].includes(cliPackageManager)) {
+    console.log("\nInvalid package manager. Use npm, yarn, or pnpm.");
+    process.exit(0);
+  }
+
+  if (!isPackageManagerInstalled(cliPackageManager)) {
+    console.log(`\n${cliPackageManager} is not installed on this machine.`);
+    process.exit(0);
+  }
+}
+
+// -----------------------------
+// Helper: check free port
 // -----------------------------
 function isPortFree(port) {
   return new Promise((resolve) => {
     const server = net.createServer();
 
-    server.once("error", () => {
-      resolve(false);
-    });
+    server.once("error", () => resolve(false));
 
     server.once("listening", () => {
-      server.close(() => {
-        resolve(true);
-      });
+      server.close(() => resolve(true));
     });
 
     server.listen(port);
@@ -121,7 +149,7 @@ function isPortFree(port) {
 }
 
 // -----------------------------
-// Ask user for project details
+// Prompt
 // -----------------------------
 inquirer
   .prompt([
@@ -164,7 +192,13 @@ inquirer
       name: "port",
       message: "Enter backend port:",
       default: cliPort || "5000",
-      when: !cliPort && (cliBackend || useNode),
+      when(answers) {
+        return (
+          !cliPort &&
+          (cliBackend === "Node.js (Express)" ||
+            answers.backend === "Node.js (Express)")
+        );
+      },
       validate(input) {
         if (!/^[0-9]+$/.test(input)) {
           return "Entered wrong port number format. Example: 8000";
@@ -189,28 +223,29 @@ inquirer
     },
   ])
   .then(async (answers) => {
-    if (cliProjectName) {
-      answers.projectName = cliProjectName;
+    if (cliProjectName) answers.projectName = cliProjectName;
+    if (cliFrontend) answers.frontend = cliFrontend;
+    if (cliBackend) answers.backend = cliBackend;
+
+    if (!answers.frontend) answers.frontend = "None";
+    if (!answers.backend) answers.backend = "None";
+
+    answers.packageManager =
+      cliPackageManager || answers.packageManager || "npm";
+
+    // -----------------------------
+    // Late duplicate check (manual prompt project name)
+    // -----------------------------
+    const projectPath = path.join(process.cwd(), answers.projectName);
+
+    if (fs.existsSync(projectPath)) {
+      console.log("\nA project with this name already exists.");
+      return;
     }
 
-    if (cliFrontend) {
-      answers.frontend = cliFrontend;
-    }
-
-    if (cliBackend) {
-      answers.backend = cliBackend;
-    }
-
-    if (!answers.frontend) {
-      answers.frontend = "None";
-    }
-
-    if (!answers.backend) {
-      answers.backend = "None";
-    }
-
-    answers.packageManager = cliPackageManager || answers.packageManager || "npm";
-
+    // -----------------------------
+    // Port validation
+    // -----------------------------
     if (answers.backend === "Node.js (Express)") {
       answers.port = Number(cliPort || answers.port || 5000);
 
@@ -229,34 +264,11 @@ inquirer
       }
     }
 
-    if (!["npm", "yarn", "pnpm"].includes(answers.packageManager)) {
-      console.log("\nInvalid package manager. Use npm, yarn, or pnpm.");
-      return;
-    }
-
-    if (!isPackageManagerInstalled(answers.packageManager)) {
-      console.log(`\n${answers.packageManager} is not installed on this machine.`);
-      return;
-    }
-
-    const projectPath = path.join(process.cwd(), answers.projectName);
-
     // -----------------------------
-    // Prevent duplicate folder names
-    // -----------------------------
-    if (fs.existsSync(projectPath)) {
-      console.log("\nA project with this name already exists.");
-      return;
-    }
-
-    // -----------------------------
-    // Create root project folder
+    // Create project root
     // -----------------------------
     fs.mkdirSync(projectPath);
 
-    // -----------------------------
-    // Base project files
-    // -----------------------------
     fs.writeFileSync(
       path.join(projectPath, ".gitignore"),
       "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage"
@@ -268,7 +280,7 @@ inquirer
     );
 
     // =====================================================
-    // BACKEND SETUP
+    // BACKEND
     // =====================================================
     if (answers.backend === "Node.js (Express)") {
       const serverPath = path.join(projectPath, "server");
@@ -280,7 +292,7 @@ inquirer
       try {
         const pm = answers.packageManager;
 
-        execSync(`${pm} init -y`, {
+        execSync("npm init -y", {
           cwd: serverPath,
           stdio: "inherit",
           shell: process.env.ComSpec,
@@ -297,8 +309,6 @@ inquirer
           };
 
           fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-
-          console.log("✅ Scripts added to package.json");
         }
 
         if (pm === "npm") {
@@ -348,24 +358,10 @@ inquirer
           path.join(serverPath, "index.js")
         );
 
-        // create .env
         fs.writeFileSync(
           path.join(serverPath, ".env"),
           `PORT=${answers.port}`
         );
-
-        // inject selected port
-        let serverCode = fs.readFileSync(
-          path.join(serverPath, "index.js"),
-          "utf8"
-        );
-
-        serverCode = serverCode.replace(
-          "process.env.PORT || 5000",
-          "process.env.PORT || " + 5000
-        );
-
-        fs.writeFileSync(path.join(serverPath, "index.js"), serverCode);
       } catch (error) {
         console.log("\n❌ Backend setup failed.");
         console.log("Check package manager installation or internet connection.");
@@ -374,7 +370,7 @@ inquirer
     }
 
     // =====================================================
-    // FRONTEND SETUP - HTML / CSS / JS
+    // HTML FRONTEND
     // =====================================================
     if (answers.frontend === "HTML / CSS / JavaScript") {
       const clientPath = path.join(projectPath, "client");
@@ -445,7 +441,7 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`
     }
 
     // =====================================================
-    // FRONTEND SETUP - REACT
+    // REACT FRONTEND
     // =====================================================
     else if (answers.frontend === "React.js (Vite)") {
       const clientPath = path.join(projectPath, "client");
@@ -453,24 +449,19 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`
       console.log("\nScaffolding React project...");
 
       try {
-        execSync(
-          `${answers.packageManager === "npm" ? "npm create vite@latest" : answers.packageManager + " create vite"} client --yes -- --template react`,
-          {
-            cwd: projectPath,
-            stdio: ["ignore", "pipe", "pipe"],
-            shell: process.env.ComSpec,
-          }
-        );
+        execSync("npm create vite@latest client --yes -- --template react", {
+          cwd: projectPath,
+          stdio: ["ignore", "pipe", "pipe"],
+          shell: process.env.ComSpec,
+        });
 
         console.log("Installing React dependencies...");
 
-        execSync(`${answers.packageManager} install`, {
+        execSync("npm install", {
           cwd: clientPath,
           stdio: "inherit",
           shell: process.env.ComSpec,
         });
-
-        console.log("✅ React installation complete!");
 
         if (answers.backend === "Node.js (Express)") {
           let appCode = fs.readFileSync(
@@ -484,13 +475,13 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`
         }
       } catch (error) {
         console.log("\n❌ React setup failed.");
-        console.log("Check package manager installation or internet connection.");
+        console.log("Check npm installation or internet connection.");
         return;
       }
     }
 
     // =====================================================
-    // FINAL INSTRUCTIONS
+    // FINAL
     // =====================================================
     console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
 
@@ -514,14 +505,14 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`
 
       console.log("\nOpen another terminal and run frontend:");
       console.log(`cd ${answers.projectName}/client`);
-      console.log(`${answers.packageManager} run dev`);
+      console.log("npm run dev");
     } else if (answers.frontend === "HTML / CSS / JavaScript") {
       console.log("\nOpen frontend:");
       console.log(`${answers.projectName}/client/index.html`);
     } else if (answers.frontend === "React.js (Vite)") {
       console.log("\nRun frontend:");
       console.log(`cd ${answers.projectName}/client`);
-      console.log(`${answers.packageManager} run dev`);
+      console.log("npm run dev");
     } else if (answers.backend === "Node.js (Express)") {
       console.log("\nRun backend:");
       console.log(`cd ${answers.projectName}/server`);

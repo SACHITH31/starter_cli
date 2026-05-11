@@ -1,29 +1,42 @@
 {
   "name": "stack-starter-cli",
-  "version": "1.0.0",
-  "description": "CLI to generate frontend and backend starter projects",
+  "version": "1.1.0",
+  "description": "CLI tool to quickly scaffold HTML, React, and Node.js starter projects.",
   "main": "bin/index.js",
   "bin": {
     "stack-starter": "./bin/index.js"
   },
   "files": [
     "bin",
-    "templates"
+    "templates",
+    "README.md"
   ],
   "scripts": {
     "start": "node bin/index.js"
   },
   "keywords": [
     "cli",
-    "starter",
     "scaffold",
-    "node",
+    "starter",
+    "boilerplate",
+    "fullstack",
+    "frontend",
+    "backend",
     "react",
-    "express"
+    "vite",
+    "express",
+    "node"
   ],
   "author": "SACHITH KASA",
   "license": "MIT",
   "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SACHITH31/starter_cli"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "inquirer": "^13.4.2"
   }

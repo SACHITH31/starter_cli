@@ -82,6 +82,7 @@ function isPackageManagerInstalled(pm) {
       stdio: "ignore",
       shell: process.env.ComSpec,
     });
+
     return true;
   } catch {
     return false;
@@ -94,6 +95,7 @@ function isGitInstalled() {
       stdio: "ignore",
       shell: process.env.ComSpec,
     });
+
     return true;
   } catch {
     return false;
@@ -114,12 +116,57 @@ function isPortFree(port) {
   });
 }
 
+function isGitConfigured() {
+  try {
+    const name = execSync("git config --global user.name")
+      .toString()
+      .trim();
+
+    const email = execSync("git config --global user.email")
+      .toString()
+      .trim();
+
+    return name && email;
+  } catch {
+    return false;
+  }
+}
+
 // ------------------------------------------------
 // EARLY VALIDATION
 // ------------------------------------------------
 if (useReact && useHtml) {
   console.log("\nYou cannot use --react and --html together.");
   process.exit(0);
+}
+
+if (portIndex !== -1 && !cliPort) {
+  console.log("\nPlease provide a port number.");
+  process.exit(0);
+}
+
+if (pmIndex !== -1 && !cliPackageManager) {
+  console.log("\nPlease provide a package manager.");
+  process.exit(0);
+}
+
+if (presetIndex !== -1 && !cliPreset) {
+  console.log("\nPlease provide a preset.");
+  process.exit(0);
+}
+
+if (cliPort) {
+  if (!/^[0-9]+$/.test(cliPort)) {
+    console.log("\nEntered wrong port number format. Example: 8000");
+    process.exit(0);
+  }
+
+  const port = Number(cliPort);
+
+  if (port < 1 || port > 65535) {
+    console.log("\nPort must be between 1 and 65535.");
+    process.exit(0);
+  }
 }
 
 if (cliPreset) {
@@ -164,6 +211,7 @@ if (cliPackageManager) {
 if (useGit && !isGitInstalled()) {
   console.log(`
 Git is not installed.
+
 Install Git from:
 https://desktop.github.com/download/
 `);
@@ -197,7 +245,9 @@ inquirer
       name: "projectName",
       message: "Enter your project name:",
       default: cliProjectName || undefined,
+
       when: !cliProjectName,
+
       validate(input) {
         const projectName = cliProjectName || input;
 
@@ -217,10 +267,12 @@ inquirer
       name: "presetChoice",
       message: "Choose fullstack preset:",
       type: "rawlist",
+
       choices: [
         "HTML / CSS / JavaScript + Node.js",
         "React.js + Node.js",
       ],
+
       when: cliPreset === "fullstack",
     },
 
@@ -228,7 +280,9 @@ inquirer
       name: "presetChoice",
       message: "Choose frontend preset:",
       type: "rawlist",
+
       choices: ["HTML / CSS / JavaScript", "React.js (Vite)"],
+
       when: cliPreset === "frontend",
     },
 
@@ -236,8 +290,11 @@ inquirer
       name: "frontend",
       message: "Choose frontend:",
       type: "rawlist",
+
       choices: ["HTML / CSS / JavaScript", "React.js (Vite)", "None"],
+
       default: 2,
+
       when: !cliFrontend && !cliPreset,
     },
 
@@ -245,8 +302,11 @@ inquirer
       name: "backend",
       message: "Choose backend:",
       type: "rawlist",
+
       choices: ["Node.js (Express)", "None"],
+
       default: 1,
+
       when: !cliBackend && !cliPreset,
     },
 
@@ -254,6 +314,7 @@ inquirer
       name: "port",
       message: "Enter backend port:",
       default: cliPort || "5000",
+
       when(answers) {
         return (
           !cliPort &&
@@ -263,6 +324,7 @@ inquirer
             cliPreset === "backend")
         );
       },
+
       validate(input) {
         if (!/^[0-9]+$/.test(input)) {
           return "Entered wrong port number format. Example: 8000";
@@ -282,17 +344,21 @@ inquirer
       name: "packageManager",
       message: "Choose package manager:",
       type: "rawlist",
+
       choices: ["npm", "yarn", "pnpm"],
+
       default: 0,
+
       when: !cliPackageManager,
     },
   ])
+
   .then(async (answers) => {
     if (cliProjectName) answers.projectName = cliProjectName;
 
-    // --------------------------------------------
+    // ------------------------------------------------
     // PRESET RESOLUTION
-    // --------------------------------------------
+    // ------------------------------------------------
     if (cliPreset === "fullstack") {
       if (answers.presetChoice === "HTML / CSS / JavaScript + Node.js") {
         answers.frontend = "HTML / CSS / JavaScript";
@@ -324,14 +390,9 @@ inquirer
 
     const projectPath = path.join(process.cwd(), answers.projectName);
 
-    if (fs.existsSync(projectPath)) {
-      console.log("\nA project with this name already exists.");
-      return;
-    }
-
-    // --------------------------------------------
+    // ------------------------------------------------
     // PORT CHECK
-    // --------------------------------------------
+    // ------------------------------------------------
     if (answers.backend === "Node.js (Express)") {
       answers.port = Number(cliPort || answers.port || 5000);
 
@@ -341,13 +402,14 @@ inquirer
         console.log(
           `\nSomething is already running on port ${answers.port}. Choose another port.`
         );
+
         return;
       }
     }
 
-    // --------------------------------------------
+    // ------------------------------------------------
     // ROOT FILES
-    // --------------------------------------------
+    // ------------------------------------------------
     fs.mkdirSync(projectPath);
 
     fs.writeFileSync(
@@ -360,11 +422,12 @@ inquirer
       `# ${answers.projectName}`
     );
 
-    // --------------------------------------------
+    // ------------------------------------------------
     // BACKEND
-    // --------------------------------------------
+    // ------------------------------------------------
     if (answers.backend === "Node.js (Express)") {
       const serverPath = path.join(projectPath, "server");
+
       const pm = answers.packageManager;
 
       fs.mkdirSync(serverPath);
@@ -446,9 +509,9 @@ inquirer
       }
     }
 
-    // --------------------------------------------
+    // ------------------------------------------------
     // HTML FRONTEND
-    // --------------------------------------------
+    // ------------------------------------------------
     if (answers.frontend === "HTML / CSS / JavaScript") {
       const clientPath = path.join(projectPath, "client");
 
@@ -482,26 +545,46 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
       }
     }
 
-    // --------------------------------------------
+    // ------------------------------------------------
     // REACT FRONTEND
-    // --------------------------------------------
+    // ------------------------------------------------
     if (answers.frontend === "React.js (Vite)") {
       const clientPath = path.join(projectPath, "client");
 
       console.log("\nScaffolding React project...");
 
       try {
+        const pm = answers.packageManager;
+
         execSync("npm create vite@latest client --yes -- --template react", {
           cwd: projectPath,
           stdio: ["ignore", "pipe", "pipe"],
           shell: process.env.ComSpec,
         });
 
-        execSync("npm install", {
-          cwd: clientPath,
-          stdio: "inherit",
-          shell: process.env.ComSpec,
-        });
+        if (pm === "npm") {
+          execSync("npm install", {
+            cwd: clientPath,
+            stdio: "inherit",
+            shell: process.env.ComSpec,
+          });
+        }
+
+        if (pm === "yarn") {
+          execSync("yarn", {
+            cwd: clientPath,
+            stdio: "inherit",
+            shell: process.env.ComSpec,
+          });
+        }
+
+        if (pm === "pnpm") {
+          execSync("pnpm install", {
+            cwd: clientPath,
+            stdio: "inherit",
+            shell: process.env.ComSpec,
+          });
+        }
 
         if (answers.backend === "Node.js (Express)") {
           let appCode = fs.readFileSync(
@@ -519,9 +602,9 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
       }
     }
 
-    // --------------------------------------------
+    // ------------------------------------------------
     // GIT
-    // --------------------------------------------
+    // ------------------------------------------------
     if (useGit) {
       console.log("\nNow git initialization step is going on...");
 
@@ -538,18 +621,28 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
           shell: process.env.ComSpec,
         });
 
-        execSync('git commit -m "Initial commit"', {
-          cwd: projectPath,
-          stdio: "ignore",
-          shell: process.env.ComSpec,
-        });
+        if (isGitConfigured()) {
+          execSync('git commit -m "Initial commit"', {
+            cwd: projectPath,
+            stdio: "ignore",
+            shell: process.env.ComSpec,
+          });
+
+          console.log("✅ Git repository initialized.");
+        } else {
+          console.log(`
+Git initialized successfully.
+
+Git commit skipped because git user.name or user.email is not configured.
+`);
+        }
       } catch {
         console.log("\nGit initialization failed.");
       }
     }
 
-    // --------------------------------------------
+    // ------------------------------------------------
     // FINAL
-    // --------------------------------------------
+    // ------------------------------------------------
     console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
   });

@@ -556,13 +556,16 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
       try {
         const pm = answers.packageManager;
 
-        execSync("npm create vite@latest client --yes -- --template react", {
-          cwd: projectPath,
-          stdio: ["ignore", "pipe", "pipe"],
-          shell: process.env.ComSpec,
-        });
-
         if (pm === "npm") {
+          execSync(
+            "npm create vite@latest client --yes -- --template react",
+            {
+              cwd: projectPath,
+              stdio: "inherit",
+              shell: process.env.ComSpec,
+            }
+          );
+
           execSync("npm install", {
             cwd: clientPath,
             stdio: "inherit",
@@ -571,6 +574,12 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         }
 
         if (pm === "yarn") {
+          execSync("yarn create vite client --template react", {
+            cwd: projectPath,
+            stdio: "inherit",
+            shell: process.env.ComSpec,
+          });
+
           execSync("yarn", {
             cwd: clientPath,
             stdio: "inherit",
@@ -579,6 +588,12 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         }
 
         if (pm === "pnpm") {
+          execSync("pnpm create vite client --template react", {
+            cwd: projectPath,
+            stdio: "inherit",
+            shell: process.env.ComSpec,
+          });
+
           execSync("pnpm install", {
             cwd: clientPath,
             stdio: "inherit",

@@ -1,24 +1,4 @@
 node_modules/
 dist/
 
-sample
-sample1
-sample12
-sample123
-
-sample
-sample1
-sample2
-sample3
-sample4
-
-sample_html
-sample_react
-
-api-only-1
-api-only-2
-
-html-node
-react-node
-
-html-only
+test

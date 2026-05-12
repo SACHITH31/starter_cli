@@ -1,19 +1,16 @@
 #!/usr/bin/env node
 
-// -----------------------------
-// Required packages
-// -----------------------------
 const inquirer = require("inquirer").default;
 const fs = require("fs");
 const path = require("path");
 const net = require("net");
 const { execSync } = require("child_process");
 
-// -----------------------------
-// Help / Version
-// -----------------------------
 const packageJson = require("../package.json");
 
+// ------------------------------------------------
+// HELP / VERSION
+// ------------------------------------------------
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
 stack-starter - project scaffolding CLI
@@ -25,6 +22,10 @@ Usage:
   stack-starter my-app --html
   stack-starter my-app --react --node --port 8000
   stack-starter my-app --react --node --pm pnpm
+  stack-starter my-app --preset fullstack
+  stack-starter my-app --preset frontend
+  stack-starter my-app --preset backend
+  stack-starter my-app --react --node --git
 
 Options:
   --help, -h       Show help
@@ -34,6 +35,8 @@ Options:
   --node           Use Node.js (Express)
   --port           Custom backend port
   --pm             Package manager (npm, yarn, pnpm)
+  --git            Initialize git
+  --preset         fullstack | frontend | backend
 `);
   process.exit(0);
 }
@@ -43,9 +46,9 @@ if (process.argv.includes("--version") || process.argv.includes("-v")) {
   process.exit(0);
 }
 
-// -----------------------------
-// CLI flags
-// -----------------------------
+// ------------------------------------------------
+// CLI FLAGS
+// ------------------------------------------------
 const cliProjectName =
   process.argv[2] && !process.argv[2].startsWith("-")
     ? process.argv[2]
@@ -54,6 +57,7 @@ const cliProjectName =
 const useReact = process.argv.includes("--react");
 const useHtml = process.argv.includes("--html");
 const useNode = process.argv.includes("--node");
+const useGit = process.argv.includes("--git");
 
 const portIndex = process.argv.indexOf("--port");
 const cliPort = portIndex !== -1 ? process.argv[portIndex + 1] : null;
@@ -61,49 +65,17 @@ const cliPort = portIndex !== -1 ? process.argv[portIndex + 1] : null;
 const pmIndex = process.argv.indexOf("--pm");
 const cliPackageManager = pmIndex !== -1 ? process.argv[pmIndex + 1] : null;
 
-// -----------------------------
-// Resolve frontend/backend
-// -----------------------------
-let cliFrontend = null;
-let cliBackend = null;
+const presetIndex = process.argv.indexOf("--preset");
+const cliPreset = presetIndex !== -1 ? process.argv[presetIndex + 1] : null;
 
-if (useReact) cliFrontend = "React.js (Vite)";
-if (useHtml) cliFrontend = "HTML / CSS / JavaScript";
-if (useNode) cliBackend = "Node.js (Express)";
-
-// if user explicitly chooses only frontend
-if ((useReact || useHtml) && !useNode) {
-  cliBackend = "None";
-}
-
-// if user explicitly chooses only backend
-if (useNode && !useReact && !useHtml) {
-  cliFrontend = "None";
-}
-
-// -----------------------------
-// Early duplicate folder check
-// -----------------------------
-if (cliProjectName) {
-  const earlyProjectPath = path.join(process.cwd(), cliProjectName);
-
-  if (fs.existsSync(earlyProjectPath)) {
-    console.log("\nA project with this name already exists.");
-    process.exit(0);
-  }
-}
-
-// -----------------------------
-// Helper: copy template
-// -----------------------------
+// ------------------------------------------------
+// HELPERS
+// ------------------------------------------------
 function copyTemplate(source, destination) {
   const content = fs.readFileSync(source, "utf-8");
   fs.writeFileSync(destination, content);
 }
 
-// -----------------------------
-// Helper: package manager installed?
-// -----------------------------
 function isPackageManagerInstalled(pm) {
   try {
     execSync(`${pm} --version`, {
@@ -116,24 +88,18 @@ function isPackageManagerInstalled(pm) {
   }
 }
 
-// -----------------------------
-// Early package manager check
-// -----------------------------
-if (cliPackageManager) {
-  if (!["npm", "yarn", "pnpm"].includes(cliPackageManager)) {
-    console.log("\nInvalid package manager. Use npm, yarn, or pnpm.");
-    process.exit(0);
-  }
-
-  if (!isPackageManagerInstalled(cliPackageManager)) {
-    console.log(`\n${cliPackageManager} is not installed on this machine.`);
-    process.exit(0);
+function isGitInstalled() {
+  try {
+    execSync("git --version", {
+      stdio: "ignore",
+      shell: process.env.ComSpec,
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 
-// -----------------------------
-// Helper: check free port
-// -----------------------------
 function isPortFree(port) {
   return new Promise((resolve) => {
     const server = net.createServer();
@@ -148,9 +114,83 @@ function isPortFree(port) {
   });
 }
 
-// -----------------------------
-// Prompt
-// -----------------------------
+// ------------------------------------------------
+// EARLY VALIDATION
+// ------------------------------------------------
+if (useReact && useHtml) {
+  console.log("\nYou cannot use --react and --html together.");
+  process.exit(0);
+}
+
+if (cliPreset) {
+  if (!["fullstack", "frontend", "backend"].includes(cliPreset)) {
+    console.log(`
+Invalid preset.
+Available presets:
+fullstack
+frontend
+backend
+`);
+    process.exit(0);
+  }
+
+  if (useReact || useHtml || useNode) {
+    console.log("\nDo not mix --preset with --react, --html, or --node.");
+    process.exit(0);
+  }
+}
+
+if (cliProjectName) {
+  const earlyProjectPath = path.join(process.cwd(), cliProjectName);
+
+  if (fs.existsSync(earlyProjectPath)) {
+    console.log("\nA project with this name already exists.");
+    process.exit(0);
+  }
+}
+
+if (cliPackageManager) {
+  if (!["npm", "yarn", "pnpm"].includes(cliPackageManager)) {
+    console.log("\nInvalid package manager. Use npm, yarn, or pnpm.");
+    process.exit(0);
+  }
+
+  if (!isPackageManagerInstalled(cliPackageManager)) {
+    console.log(`\n${cliPackageManager} is not installed on this machine.`);
+    process.exit(0);
+  }
+}
+
+if (useGit && !isGitInstalled()) {
+  console.log(`
+Git is not installed.
+Install Git from:
+https://desktop.github.com/download/
+`);
+  process.exit(0);
+}
+
+// ------------------------------------------------
+// RESOLVE FRONTEND / BACKEND
+// ------------------------------------------------
+let cliFrontend = null;
+let cliBackend = null;
+
+if (useReact) cliFrontend = "React.js (Vite)";
+if (useHtml) cliFrontend = "HTML / CSS / JavaScript";
+if (useNode) cliBackend = "Node.js (Express)";
+
+if ((useReact || useHtml) && !useNode) {
+  cliBackend = "None";
+}
+
+if (useNode && !useReact && !useHtml) {
+  cliFrontend = "None";
+}
+
+// ------------------------------------------------
+// PROMPT
+// ------------------------------------------------
 inquirer
   .prompt([
     {
@@ -172,22 +212,44 @@ inquirer
         return true;
       },
     },
+
+    {
+      name: "presetChoice",
+      message: "Choose fullstack preset:",
+      type: "rawlist",
+      choices: [
+        "HTML / CSS / JavaScript + Node.js",
+        "React.js + Node.js",
+      ],
+      when: cliPreset === "fullstack",
+    },
+
+    {
+      name: "presetChoice",
+      message: "Choose frontend preset:",
+      type: "rawlist",
+      choices: ["HTML / CSS / JavaScript", "React.js (Vite)"],
+      when: cliPreset === "frontend",
+    },
+
     {
       name: "frontend",
       message: "Choose frontend:",
       type: "rawlist",
       choices: ["HTML / CSS / JavaScript", "React.js (Vite)", "None"],
       default: 2,
-      when: !cliFrontend,
+      when: !cliFrontend && !cliPreset,
     },
+
     {
       name: "backend",
       message: "Choose backend:",
       type: "rawlist",
       choices: ["Node.js (Express)", "None"],
       default: 1,
-      when: !cliBackend,
+      when: !cliBackend && !cliPreset,
     },
+
     {
       name: "port",
       message: "Enter backend port:",
@@ -196,7 +258,9 @@ inquirer
         return (
           !cliPort &&
           (cliBackend === "Node.js (Express)" ||
-            answers.backend === "Node.js (Express)")
+            answers.backend === "Node.js (Express)" ||
+            cliPreset === "fullstack" ||
+            cliPreset === "backend")
         );
       },
       validate(input) {
@@ -213,6 +277,7 @@ inquirer
         return true;
       },
     },
+
     {
       name: "packageManager",
       message: "Choose package manager:",
@@ -224,6 +289,30 @@ inquirer
   ])
   .then(async (answers) => {
     if (cliProjectName) answers.projectName = cliProjectName;
+
+    // --------------------------------------------
+    // PRESET RESOLUTION
+    // --------------------------------------------
+    if (cliPreset === "fullstack") {
+      if (answers.presetChoice === "HTML / CSS / JavaScript + Node.js") {
+        answers.frontend = "HTML / CSS / JavaScript";
+        answers.backend = "Node.js (Express)";
+      } else {
+        answers.frontend = "React.js (Vite)";
+        answers.backend = "Node.js (Express)";
+      }
+    }
+
+    if (cliPreset === "frontend") {
+      answers.frontend = answers.presetChoice;
+      answers.backend = "None";
+    }
+
+    if (cliPreset === "backend") {
+      answers.frontend = "None";
+      answers.backend = "Node.js (Express)";
+    }
+
     if (cliFrontend) answers.frontend = cliFrontend;
     if (cliBackend) answers.backend = cliBackend;
 
@@ -233,9 +322,6 @@ inquirer
     answers.packageManager =
       cliPackageManager || answers.packageManager || "npm";
 
-    // -----------------------------
-    // Late duplicate check (manual prompt project name)
-    // -----------------------------
     const projectPath = path.join(process.cwd(), answers.projectName);
 
     if (fs.existsSync(projectPath)) {
@@ -243,16 +329,11 @@ inquirer
       return;
     }
 
-    // -----------------------------
-    // Port validation
-    // -----------------------------
+    // --------------------------------------------
+    // PORT CHECK
+    // --------------------------------------------
     if (answers.backend === "Node.js (Express)") {
       answers.port = Number(cliPort || answers.port || 5000);
-
-      if (!/^[0-9]+$/.test(String(answers.port))) {
-        console.log("\nEntered wrong port number format. Example: 8000");
-        return;
-      }
 
       const free = await isPortFree(answers.port);
 
@@ -264,9 +345,9 @@ inquirer
       }
     }
 
-    // -----------------------------
-    // Create project root
-    // -----------------------------
+    // --------------------------------------------
+    // ROOT FILES
+    // --------------------------------------------
     fs.mkdirSync(projectPath);
 
     fs.writeFileSync(
@@ -279,19 +360,18 @@ inquirer
       `# ${answers.projectName}`
     );
 
-    // =====================================================
+    // --------------------------------------------
     // BACKEND
-    // =====================================================
+    // --------------------------------------------
     if (answers.backend === "Node.js (Express)") {
       const serverPath = path.join(projectPath, "server");
+      const pm = answers.packageManager;
 
       fs.mkdirSync(serverPath);
 
       console.log("\nSetting up backend...");
 
       try {
-        const pm = answers.packageManager;
-
         execSync("npm init -y", {
           cwd: serverPath,
           stdio: "inherit",
@@ -300,16 +380,14 @@ inquirer
 
         const pkgPath = path.join(serverPath, "package.json");
 
-        if (fs.existsSync(pkgPath)) {
-          const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
-          pkg.scripts = {
-            start: "node index.js",
-            dev: "nodemon index.js",
-          };
+        pkg.scripts = {
+          start: "node index.js",
+          dev: "nodemon index.js",
+        };
 
-          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-        }
+        fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
         if (pm === "npm") {
           execSync("npm install express cors dotenv", {
@@ -362,59 +440,28 @@ inquirer
           path.join(serverPath, ".env"),
           `PORT=${answers.port}`
         );
-      } catch (error) {
+      } catch {
         console.log("\n❌ Backend setup failed.");
-        console.log("Check package manager installation or internet connection.");
         return;
       }
     }
 
-    // =====================================================
+    // --------------------------------------------
     // HTML FRONTEND
-    // =====================================================
+    // --------------------------------------------
     if (answers.frontend === "HTML / CSS / JavaScript") {
       const clientPath = path.join(projectPath, "client");
 
       fs.mkdirSync(clientPath);
 
-      console.log("\nSetting up HTML / CSS / JavaScript frontend...");
-
-      fs.writeFileSync(
-        path.join(clientPath, "index.html"),
-        `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>${answers.projectName}</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <h1>Frontend Status: <span id="status">Loading...</span></h1>
-
-  <div id="response-box" style="padding: 20px; border: 1px solid #ccc; margin-top: 20px;">
-    Backend Message: <strong id="message">Please wait...</strong>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>`
+      copyTemplate(
+        path.join(__dirname, "..", "templates", "html", "index.html"),
+        path.join(clientPath, "index.html")
       );
 
-      fs.writeFileSync(
-        path.join(clientPath, "style.css"),
-        `body {
-  font-family: Arial, sans-serif;
-  padding: 40px;
-  text-align: center;
-  background: #f5f5f5;
-}
-
-#response-box {
-  background: white;
-  display: inline-block;
-  padding: 20px;
-  border-radius: 8px;
-}`
+      copyTemplate(
+        path.join(__dirname, "..", "templates", "html", "style.css"),
+        path.join(clientPath, "style.css")
       );
 
       if (answers.backend === "Node.js (Express)") {
@@ -429,21 +476,16 @@ inquirer
       } else {
         fs.writeFileSync(
           path.join(clientPath, "script.js"),
-          `const statusEl = document.getElementById("status");
-const messageEl = document.getElementById("message");
-
-statusEl.textContent = "Standalone";
-statusEl.style.color = "green";
-
-messageEl.textContent = "No backend selected. Frontend is ready.";`
+          `document.getElementById("status").textContent = "Standalone";
+document.getElementById("message").textContent = "No backend selected. Frontend is ready.";`
         );
       }
     }
 
-    // =====================================================
+    // --------------------------------------------
     // REACT FRONTEND
-    // =====================================================
-    else if (answers.frontend === "React.js (Vite)") {
+    // --------------------------------------------
+    if (answers.frontend === "React.js (Vite)") {
       const clientPath = path.join(projectPath, "client");
 
       console.log("\nScaffolding React project...");
@@ -454,8 +496,6 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`
           stdio: ["ignore", "pipe", "pipe"],
           shell: process.env.ComSpec,
         });
-
-        console.log("Installing React dependencies...");
 
         execSync("npm install", {
           cwd: clientPath,
@@ -473,49 +513,43 @@ messageEl.textContent = "No backend selected. Frontend is ready.";`
 
           fs.writeFileSync(path.join(clientPath, "src", "App.jsx"), appCode);
         }
-      } catch (error) {
+      } catch {
         console.log("\n❌ React setup failed.");
-        console.log("Check npm installation or internet connection.");
         return;
       }
     }
 
-    // =====================================================
-    // FINAL
-    // =====================================================
-    console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
+    // --------------------------------------------
+    // GIT
+    // --------------------------------------------
+    if (useGit) {
+      console.log("\nNow git initialization step is going on...");
 
-    if (
-      answers.frontend === "HTML / CSS / JavaScript" &&
-      answers.backend === "Node.js (Express)"
-    ) {
-      console.log("\nRun backend:");
-      console.log(`cd ${answers.projectName}/server`);
-      console.log(`${answers.packageManager} run dev`);
+      try {
+        execSync("git init", {
+          cwd: projectPath,
+          stdio: "ignore",
+          shell: process.env.ComSpec,
+        });
 
-      console.log("\nThen open frontend:");
-      console.log(`${answers.projectName}/client/index.html`);
-    } else if (
-      answers.frontend === "React.js (Vite)" &&
-      answers.backend === "Node.js (Express)"
-    ) {
-      console.log("\nRun backend:");
-      console.log(`cd ${answers.projectName}/server`);
-      console.log(`${answers.packageManager} run dev`);
+        execSync("git add .", {
+          cwd: projectPath,
+          stdio: "ignore",
+          shell: process.env.ComSpec,
+        });
 
-      console.log("\nOpen another terminal and run frontend:");
-      console.log(`cd ${answers.projectName}/client`);
-      console.log("npm run dev");
-    } else if (answers.frontend === "HTML / CSS / JavaScript") {
-      console.log("\nOpen frontend:");
-      console.log(`${answers.projectName}/client/index.html`);
-    } else if (answers.frontend === "React.js (Vite)") {
-      console.log("\nRun frontend:");
-      console.log(`cd ${answers.projectName}/client`);
-      console.log("npm run dev");
-    } else if (answers.backend === "Node.js (Express)") {
-      console.log("\nRun backend:");
-      console.log(`cd ${answers.projectName}/server`);
-      console.log(`${answers.packageManager} run dev`);
+        execSync('git commit -m "Initial commit"', {
+          cwd: projectPath,
+          stdio: "ignore",
+          shell: process.env.ComSpec,
+        });
+      } catch {
+        console.log("\nGit initialization failed.");
+      }
     }
+
+    // --------------------------------------------
+    // FINAL
+    // --------------------------------------------
+    console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
   });

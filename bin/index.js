@@ -47,6 +47,45 @@ if (process.argv.includes("--version") || process.argv.includes("-v")) {
 }
 
 // ------------------------------------------------
+// VALID FLAGS
+// ------------------------------------------------
+const validFlags = [
+  "--help",
+  "-h",
+  "--version",
+  "-v",
+  "--react",
+  "--html",
+  "--node",
+  "--port",
+  "--pm",
+  "--git",
+  "--preset",
+];
+
+// ------------------------------------------------
+// INVALID FLAG CHECK
+// ------------------------------------------------
+const invalidFlags = process.argv
+  .slice(2)
+  .filter(
+    (arg) =>
+      arg.startsWith("-") &&
+      !validFlags.includes(arg) &&
+      !/^[0-9]+$/.test(arg)
+  );
+
+if (invalidFlags.length > 0) {
+  console.log(`
+Invalid flag(s):
+${invalidFlags.join("\n")}
+
+Use --help to see available options.
+`);
+  process.exit(0);
+}
+
+// ------------------------------------------------
 // CLI FLAGS
 // ------------------------------------------------
 const cliProjectName =
@@ -69,6 +108,12 @@ const presetIndex = process.argv.indexOf("--preset");
 const cliPreset = presetIndex !== -1 ? process.argv[presetIndex + 1] : null;
 
 // ------------------------------------------------
+// SHELL
+// ------------------------------------------------
+const shell =
+  process.platform === "win32" ? process.env.ComSpec : true;
+
+// ------------------------------------------------
 // HELPERS
 // ------------------------------------------------
 function copyTemplate(source, destination) {
@@ -80,7 +125,7 @@ function isPackageManagerInstalled(pm) {
   try {
     execSync(`${pm} --version`, {
       stdio: "ignore",
-      shell: process.env.ComSpec,
+      shell,
     });
 
     return true;
@@ -93,7 +138,7 @@ function isGitInstalled() {
   try {
     execSync("git --version", {
       stdio: "ignore",
-      shell: process.env.ComSpec,
+      shell,
     });
 
     return true;
@@ -118,11 +163,15 @@ function isPortFree(port) {
 
 function isGitConfigured() {
   try {
-    const name = execSync("git config --global user.name")
+    const name = execSync("git config --global user.name", {
+      shell,
+    })
       .toString()
       .trim();
 
-    const email = execSync("git config --global user.email")
+    const email = execSync("git config --global user.email", {
+      shell,
+    })
       .toString()
       .trim();
 
@@ -173,6 +222,7 @@ if (cliPreset) {
   if (!["fullstack", "frontend", "backend"].includes(cliPreset)) {
     console.log(`
 Invalid preset.
+
 Available presets:
 fullstack
 frontend
@@ -435,11 +485,29 @@ inquirer
       console.log("\nSetting up backend...");
 
       try {
-        execSync("npm init -y", {
-          cwd: serverPath,
-          stdio: "inherit",
-          shell: process.env.ComSpec,
-        });
+        if (pm === "npm") {
+          execSync("npm init -y", {
+            cwd: serverPath,
+            stdio: "inherit",
+            shell,
+          });
+        }
+
+        if (pm === "yarn") {
+          execSync("yarn init -y", {
+            cwd: serverPath,
+            stdio: "inherit",
+            shell,
+          });
+        }
+
+        if (pm === "pnpm") {
+          execSync("pnpm init", {
+            cwd: serverPath,
+            stdio: "inherit",
+            shell,
+          });
+        }
 
         const pkgPath = path.join(serverPath, "package.json");
 
@@ -456,13 +524,13 @@ inquirer
           execSync("npm install express cors dotenv", {
             cwd: serverPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
 
           execSync("npm install -D nodemon", {
             cwd: serverPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
         }
 
@@ -470,13 +538,13 @@ inquirer
           execSync("yarn add express cors dotenv", {
             cwd: serverPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
 
           execSync("yarn add -D nodemon", {
             cwd: serverPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
         }
 
@@ -484,13 +552,13 @@ inquirer
           execSync("pnpm add express cors dotenv", {
             cwd: serverPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
 
           execSync("pnpm add -D nodemon", {
             cwd: serverPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
         }
 
@@ -562,14 +630,14 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
             {
               cwd: projectPath,
               stdio: "inherit",
-              shell: process.env.ComSpec,
+              shell,
             }
           );
 
           execSync("npm install", {
             cwd: clientPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
         }
 
@@ -577,13 +645,13 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
           execSync("yarn create vite client --template react", {
             cwd: projectPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
 
           execSync("yarn", {
             cwd: clientPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
         }
 
@@ -591,13 +659,13 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
           execSync("pnpm create vite client --template react", {
             cwd: projectPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
 
           execSync("pnpm install", {
             cwd: clientPath,
             stdio: "inherit",
-            shell: process.env.ComSpec,
+            shell,
           });
         }
 
@@ -627,20 +695,20 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         execSync("git init", {
           cwd: projectPath,
           stdio: "ignore",
-          shell: process.env.ComSpec,
+          shell,
         });
 
         execSync("git add .", {
           cwd: projectPath,
           stdio: "ignore",
-          shell: process.env.ComSpec,
+          shell,
         });
 
         if (isGitConfigured()) {
           execSync('git commit -m "Initial commit"', {
             cwd: projectPath,
             stdio: "ignore",
-            shell: process.env.ComSpec,
+            shell,
           });
 
           console.log("✅ Git repository initialized.");

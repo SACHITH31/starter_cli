@@ -142,7 +142,8 @@ stack-starter app --randomFlag
 Output:
 
 ```text
-Unknown option: --randomFlag
+Invalid flag(s):
+--randomFlag
 ```
 
 ---

@@ -227,6 +227,26 @@ stack-starter my-app --react --node --pm pnpm
 
 Backend initialization uses the selected package manager:
 
+> Use the same package manager to run the project later.
+
+### npm
+
+```bash
+npm run dev
+```
+
+### yarn
+
+```bash
+yarn dev
+```
+
+### pnpm
+
+```bash
+pnpm dev
+```
+
 | Package manager | Backend init | Install dependencies |
 | --- | --- | --- |
 | npm | `npm init -y` | `npm install` |
@@ -259,7 +279,7 @@ If Git is installed but `user.name` or `user.email` is missing, the repository i
 
 ## Example Workflows
 
-### Build a React app
+### Build a React app with npm
 
 ```bash
 stack-starter dashboard --react --pm npm
@@ -267,12 +287,21 @@ cd dashboard/client
 npm run dev
 ```
 
+### Build a React app with yarn
+
+```bash
+stack-starter dashboard --react --pm yarn
+cd dashboard/client
+yarn dev
+```
+
+
 ### Build an Express API
 
 ```bash
 stack-starter api-server --node --port 8000 --pm pnpm
 cd api-server/server
-pnpm run dev
+pnpm dev
 ```
 
 ### Build a fullstack app with Git

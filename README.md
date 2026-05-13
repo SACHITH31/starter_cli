@@ -1,32 +1,35 @@
-# stack-starter-cli
+# stack-starter
 
-A simple CLI tool to quickly create starter projects for frontend, backend, or full stack development.
+A simple project scaffolding CLI for creating frontend, backend, and fullstack starter projects fast.
 
-It helps you create project folders, install dependencies, and generate starter files in a few commands.
+Use it when you want a clean React, HTML, Node.js, or fullstack setup without copying the same files again and again.
 
 ---
 
 ## Features
 
-* HTML / CSS / JavaScript starter
-* React starter using Vite
-* Node.js backend using Express
-* Custom backend port support
-* Automatic `.env` file creation
-* Package manager choice: npm, yarn, or pnpm
-* Ready-to-use starter folder structure
+| Feature | Included |
+| --- | --- |
+| React frontend | Vite + React starter |
+| HTML frontend | HTML, CSS, and JavaScript starter |
+| Node backend | Express server with CORS and dotenv |
+| Fullstack setup | Frontend and backend in one project |
+| Package managers | npm, yarn, and pnpm |
+| Custom backend port | `--port` option |
+| Git setup | Optional `git init` and first commit |
+| Presets | Quick frontend, backend, and fullstack modes |
 
 ---
 
-## Install
+## Installation
 
-Install globally from npm:
+Install globally:
 
 ```bash
 npm install -g stack-starter-cli
 ```
 
-After installing, use the command:
+Then run:
 
 ```bash
 stack-starter
@@ -34,150 +37,276 @@ stack-starter
 
 ---
 
-## Basic Usage
+## Usage
 
-### Interactive mode
+Start in interactive mode:
 
 ```bash
 stack-starter
 ```
 
-The CLI will ask for project details step by step.
-
----
-
-### Create a project with only project name
+Create a project and answer the remaining questions:
 
 ```bash
 stack-starter my-app
 ```
 
-The CLI will ask the remaining questions.
+Create a project directly with flags:
+
+```bash
+stack-starter my-app --react --node --pm pnpm --git
+```
 
 ---
 
-## Frontend and Backend Commands
-
-### React + Node.js
-
-```bash
-stack-starter my-app --react --node
-```
-
-### HTML + Node.js
-
-```bash
-stack-starter my-app --html --node
-```
+## Command Examples
 
 ### React only
 
 ```bash
-stack-starter my-app --react
+stack-starter my-react-app --react
 ```
 
-### HTML only
+### Backend only
 
 ```bash
-stack-starter my-app --html
+stack-starter my-api --node
 ```
 
-### Node.js only
+### Fullstack
 
 ```bash
-stack-starter my-app --node
+stack-starter my-fullstack-app --react --node
 ```
 
----
+### HTML frontend with backend
 
-## Version 1.1.0 Features
+```bash
+stack-starter my-site --html --node
+```
 
 ### Custom backend port
 
 ```bash
-stack-starter my-app --react --node --port 8000
+stack-starter my-api --node --port 8000
 ```
 
-If no port is given, the default port is `5000`.
-
-If the selected port is invalid or already in use, the CLI shows a clear message.
-
----
-
-### Package manager selection
-
-### npm
+### Git initialization
 
 ```bash
-stack-starter my-app --react --node --pm npm
+stack-starter my-app --react --node --git
 ```
 
-### yarn
-
-```bash
-stack-starter my-app --react --node --pm yarn
-```
-
-### pnpm
+### pnpm usage
 
 ```bash
 stack-starter my-app --react --node --pm pnpm
 ```
 
-If the selected package manager is not installed, the CLI will stop and show a message.
+### yarn usage
+
+```bash
+stack-starter my-app --react --node --pm yarn
+```
+
+### Presets
+
+```bash
+stack-starter my-app --preset fullstack
+stack-starter my-app --preset frontend
+stack-starter my-app --preset backend
+```
 
 ---
 
-## Generated Project Structure
+## Available Flags
 
-Example for full stack projects:
+| Flag | Description | Example |
+| --- | --- | --- |
+| `--react` | Create a React.js frontend with Vite | `stack-starter app --react` |
+| `--html` | Create an HTML/CSS/JavaScript frontend | `stack-starter app --html` |
+| `--node` | Create a Node.js Express backend | `stack-starter app --node` |
+| `--port` | Set the backend port | `stack-starter app --node --port 8000` |
+| `--pm` | Choose `npm`, `yarn`, or `pnpm` | `stack-starter app --pm pnpm` |
+| `--git` | Initialize Git after project creation | `stack-starter app --git` |
+| `--preset` | Use `fullstack`, `frontend`, or `backend` | `stack-starter app --preset fullstack` |
+| `--help` | Show help | `stack-starter --help` |
+| `--version` | Show package version | `stack-starter --version` |
+
+Unknown flags stop the CLI before prompts start:
+
+```bash
+stack-starter app --randomFlag
+```
+
+Output:
+
+```text
+Unknown option: --randomFlag
+```
+
+---
+
+## Presets
+
+Presets are quick setup modes.
+
+| Preset | What it does |
+| --- | --- |
+| `fullstack` | Lets you choose React + Node.js or HTML + Node.js |
+| `frontend` | Lets you choose React or HTML |
+| `backend` | Creates a Node.js Express backend |
+
+Examples:
+
+```bash
+stack-starter my-app --preset fullstack
+stack-starter my-site --preset frontend
+stack-starter my-api --preset backend
+```
+
+---
+
+## Generated Project Structure Examples
+
+### React + Node.js
 
 ```text
 my-app/
   client/
+    src/
+    package.json
   server/
+    index.js
+    .env
+    package.json
+  .gitignore
+  README.md
+```
+
+### HTML + Node.js
+
+```text
+my-app/
+  client/
+    index.html
+    style.css
+    script.js
+  server/
+    index.js
+    .env
+    package.json
+  .gitignore
+  README.md
+```
+
+### Backend only
+
+```text
+my-api/
+  server/
+    index.js
+    .env
+    package.json
   .gitignore
   README.md
 ```
 
 ---
 
-## Help
+## Package Manager Support
 
-Show help:
-
-```bash
-stack-starter --help
-```
-
-Show version:
+Choose your package manager with `--pm`.
 
 ```bash
-stack-starter --version
-```
-
----
-
-## Example Commands
-
-```bash
-stack-starter
-stack-starter my-app
-stack-starter my-app --react
-stack-starter my-app --html
-stack-starter my-app --react --node
-stack-starter my-app --html --node
-stack-starter my-app --react --node --port 8000
 stack-starter my-app --react --node --pm npm
+stack-starter my-app --react --node --pm yarn
+stack-starter my-app --react --node --pm pnpm
+```
+
+Backend initialization uses the selected package manager:
+
+| Package manager | Backend init | Install dependencies |
+| --- | --- | --- |
+| npm | `npm init -y` | `npm install` |
+| yarn | `yarn init -y` | `yarn add` |
+| pnpm | `pnpm init` | `pnpm add` |
+
+React projects are also created and installed with the selected package manager.
+
+---
+
+## Git Support
+
+Add `--git` to initialize a Git repository:
+
+```bash
+stack-starter my-app --react --node --git
+```
+
+The CLI will run:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+```
+
+If Git is installed but `user.name` or `user.email` is missing, the repository is still initialized and the commit is skipped.
+
+---
+
+## Example Workflows
+
+### Build a React app
+
+```bash
+stack-starter dashboard --react --pm npm
+cd dashboard/client
+npm run dev
+```
+
+### Build an Express API
+
+```bash
+stack-starter api-server --node --port 8000 --pm pnpm
+cd api-server/server
+pnpm run dev
+```
+
+### Build a fullstack app with Git
+
+```bash
+stack-starter product-app --react --node --pm yarn --git
+cd product-app
 ```
 
 ---
 
-## Notes
+## Why use stack-starter?
 
-* The project folder name must be unique.
-* If the folder already exists, the CLI will stop before asking setup questions.
-* For backend projects, a `.env` file is created automatically.
+- Start projects quickly
+- Keep frontend and backend folders organized
+- Choose the package manager you already use
+- Avoid repeating the same setup steps
+- Good for beginners, practice projects, and quick prototypes
+
+---
+
+## Contributing
+
+Contributions are welcome.
+
+To work locally:
+
+```bash
+git clone https://github.com/SACHITH31/starter_cli.git
+cd starter_cli
+npm install
+npm start
+```
+
+Please keep changes simple, readable, and focused.
 
 ---
 

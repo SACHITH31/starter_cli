@@ -68,12 +68,7 @@ const validFlags = [
 // ------------------------------------------------
 const invalidFlags = process.argv
   .slice(2)
-  .filter(
-    (arg) =>
-      arg.startsWith("-") &&
-      !validFlags.includes(arg) &&
-      !/^[0-9]+$/.test(arg)
-  );
+  .filter((arg) => arg.startsWith("-") && !validFlags.includes(arg));
 
 if (invalidFlags.length > 0) {
   console.log(`
@@ -82,16 +77,14 @@ ${invalidFlags.join("\n")}
 
 Use --help to see available options.
 `);
-  process.exit(0);
+  process.exit(1);
 }
 
 // ------------------------------------------------
 // CLI FLAGS
 // ------------------------------------------------
 const cliProjectName =
-  process.argv[2] && !process.argv[2].startsWith("-")
-    ? process.argv[2]
-    : null;
+  process.argv[2] && !process.argv[2].startsWith("-") ? process.argv[2] : null;
 
 const useReact = process.argv.includes("--react");
 const useHtml = process.argv.includes("--html");
@@ -99,19 +92,37 @@ const useNode = process.argv.includes("--node");
 const useGit = process.argv.includes("--git");
 
 const portIndex = process.argv.indexOf("--port");
-const cliPort = portIndex !== -1 ? process.argv[portIndex + 1] : null;
+
+const cliPort =
+  portIndex !== -1 &&
+  process.argv[portIndex + 1] &&
+  !process.argv[portIndex + 1].startsWith("-")
+    ? process.argv[portIndex + 1]
+    : null;
 
 const pmIndex = process.argv.indexOf("--pm");
-const cliPackageManager = pmIndex !== -1 ? process.argv[pmIndex + 1] : null;
+
+const cliPackageManager =
+  pmIndex !== -1 &&
+  process.argv[pmIndex + 1] &&
+  !process.argv[pmIndex + 1].startsWith("-")
+    ? process.argv[pmIndex + 1]
+    : null;
 
 const presetIndex = process.argv.indexOf("--preset");
-const cliPreset = presetIndex !== -1 ? process.argv[presetIndex + 1] : null;
+
+const cliPreset =
+  presetIndex !== -1 &&
+  process.argv[presetIndex + 1] &&
+  !process.argv[presetIndex + 1].startsWith("-")
+    ? process.argv[presetIndex + 1]
+    : null;
 
 // ------------------------------------------------
 // SHELL
 // ------------------------------------------------
 const shell =
-  process.platform === "win32" ? process.env.ComSpec : true;
+  process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : true;
 
 // ------------------------------------------------
 // HELPERS
@@ -190,17 +201,17 @@ if (useReact && useHtml) {
 }
 
 if (portIndex !== -1 && !cliPort) {
-  console.log("\nPlease provide a port number.");
+  console.log("\nPlease provide a valid port number.");
   process.exit(0);
 }
 
 if (pmIndex !== -1 && !cliPackageManager) {
-  console.log("\nPlease provide a package manager.");
+  console.log("\nPlease provide a valid package manager.");
   process.exit(0);
 }
 
 if (presetIndex !== -1 && !cliPreset) {
-  console.log("\nPlease provide a preset.");
+  console.log("\nPlease provide a valid preset.");
   process.exit(0);
 }
 
@@ -238,6 +249,11 @@ backend
 }
 
 if (cliProjectName) {
+  if (!/^[a-zA-Z0-9_-]+$/.test(cliProjectName)) {
+    console.log("\nUse only letters, numbers, hyphen (-), or underscore (_).");
+    process.exit(0);
+  }
+
   const earlyProjectPath = path.join(process.cwd(), cliProjectName);
 
   if (fs.existsSync(earlyProjectPath)) {
@@ -318,10 +334,7 @@ inquirer
       message: "Choose fullstack preset:",
       type: "rawlist",
 
-      choices: [
-        "HTML / CSS / JavaScript + Node.js",
-        "React.js + Node.js",
-      ],
+      choices: ["HTML / CSS / JavaScript + Node.js", "React.js + Node.js"],
 
       when: cliPreset === "fullstack",
     },
@@ -438,6 +451,13 @@ inquirer
     answers.packageManager =
       cliPackageManager || answers.packageManager || "npm";
 
+    if (!isPackageManagerInstalled(answers.packageManager)) {
+      console.log(
+        `\n${answers.packageManager} is not installed on this machine.`,
+      );
+
+      return;
+    }
     const projectPath = path.join(process.cwd(), answers.projectName);
 
     // ------------------------------------------------
@@ -450,7 +470,7 @@ inquirer
 
       if (!free) {
         console.log(
-          `\nSomething is already running on port ${answers.port}. Choose another port.`
+          `\nSomething is already running on port ${answers.port}. Choose another port.`,
         );
 
         return;
@@ -464,12 +484,12 @@ inquirer
 
     fs.writeFileSync(
       path.join(projectPath, ".gitignore"),
-      "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage"
+      "node_modules\n.env\ndist\n.vite\n.DS_Store\ncoverage",
     );
 
     fs.writeFileSync(
       path.join(projectPath, "README.md"),
-      `# ${answers.projectName}`
+      `# ${answers.projectName}`,
     );
 
     // ------------------------------------------------
@@ -564,13 +584,10 @@ inquirer
 
         copyTemplate(
           path.join(__dirname, "..", "templates", "server", "index.js"),
-          path.join(serverPath, "index.js")
+          path.join(serverPath, "index.js"),
         );
 
-        fs.writeFileSync(
-          path.join(serverPath, ".env"),
-          `PORT=${answers.port}`
-        );
+        fs.writeFileSync(path.join(serverPath, ".env"), `PORT=${answers.port}`);
       } catch {
         console.log("\n❌ Backend setup failed.");
         return;
@@ -587,18 +604,18 @@ inquirer
 
       copyTemplate(
         path.join(__dirname, "..", "templates", "html", "index.html"),
-        path.join(clientPath, "index.html")
+        path.join(clientPath, "index.html"),
       );
 
       copyTemplate(
         path.join(__dirname, "..", "templates", "html", "style.css"),
-        path.join(clientPath, "style.css")
+        path.join(clientPath, "style.css"),
       );
 
       if (answers.backend === "Node.js (Express)") {
         let script = fs.readFileSync(
           path.join(__dirname, "..", "templates", "html", "script.js"),
-          "utf8"
+          "utf8",
         );
 
         script = script.replace(/5000/g, answers.port);
@@ -608,7 +625,7 @@ inquirer
         fs.writeFileSync(
           path.join(clientPath, "script.js"),
           `document.getElementById("status").textContent = "Standalone";
-document.getElementById("message").textContent = "No backend selected. Frontend is ready.";`
+document.getElementById("message").textContent = "No backend selected. Frontend is ready.";`,
         );
       }
     }
@@ -625,14 +642,11 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         const pm = answers.packageManager;
 
         if (pm === "npm") {
-          execSync(
-            "npm create vite@latest client --yes -- --template react",
-            {
-              cwd: projectPath,
-              stdio: "inherit",
-              shell,
-            }
-          );
+          execSync("npm create vite@latest client --yes -- --template react", {
+            cwd: projectPath,
+            stdio: "inherit",
+            shell,
+          });
 
           execSync("npm install", {
             cwd: clientPath,
@@ -672,7 +686,7 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         if (answers.backend === "Node.js (Express)") {
           let appCode = fs.readFileSync(
             path.join(__dirname, "..", "templates", "react", "App.jsx"),
-            "utf8"
+            "utf8",
           );
 
           appCode = appCode.replace(/5000/g, answers.port);

@@ -122,7 +122,7 @@ const cliPreset =
 // SHELL
 // ------------------------------------------------
 const shell =
-  process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : true;
+  process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : undefined;
 
 // ------------------------------------------------
 // HELPERS
@@ -197,35 +197,35 @@ function isGitConfigured() {
 // ------------------------------------------------
 if (useReact && useHtml) {
   console.log("\nYou cannot use --react and --html together.");
-  process.exit(0);
+  process.exit(1);
 }
 
 if (portIndex !== -1 && !cliPort) {
   console.log("\nPlease provide a valid port number.");
-  process.exit(0);
+  process.exit(1);
 }
 
 if (pmIndex !== -1 && !cliPackageManager) {
   console.log("\nPlease provide a valid package manager.");
-  process.exit(0);
+  process.exit(1);
 }
 
 if (presetIndex !== -1 && !cliPreset) {
   console.log("\nPlease provide a valid preset.");
-  process.exit(0);
+  process.exit(1);
 }
 
 if (cliPort) {
   if (!/^[0-9]+$/.test(cliPort)) {
     console.log("\nEntered wrong port number format. Example: 8000");
-    process.exit(0);
+    process.exit(1);
   }
 
   const port = Number(cliPort);
 
   if (port < 1 || port > 65535) {
     console.log("\nPort must be between 1 and 65535.");
-    process.exit(0);
+    process.exit(1);
   }
 }
 
@@ -239,38 +239,38 @@ fullstack
 frontend
 backend
 `);
-    process.exit(0);
+    process.exit(1);
   }
 
   if (useReact || useHtml || useNode) {
     console.log("\nDo not mix --preset with --react, --html, or --node.");
-    process.exit(0);
+    process.exit(1);
   }
 }
 
 if (cliProjectName) {
   if (!/^[a-zA-Z0-9_-]+$/.test(cliProjectName)) {
     console.log("\nUse only letters, numbers, hyphen (-), or underscore (_).");
-    process.exit(0);
+    process.exit(1);
   }
 
   const earlyProjectPath = path.join(process.cwd(), cliProjectName);
 
   if (fs.existsSync(earlyProjectPath)) {
     console.log("\nA project with this name already exists.");
-    process.exit(0);
+    process.exit(1);
   }
 }
 
 if (cliPackageManager) {
   if (!["npm", "yarn", "pnpm"].includes(cliPackageManager)) {
     console.log("\nInvalid package manager. Use npm, yarn, or pnpm.");
-    process.exit(0);
+    process.exit(1);
   }
 
   if (!isPackageManagerInstalled(cliPackageManager)) {
     console.log(`\n${cliPackageManager} is not installed on this machine.`);
-    process.exit(0);
+    process.exit(1);
   }
 }
 
@@ -281,7 +281,7 @@ Git is not installed.
 Install Git from:
 https://desktop.github.com/download/
 `);
-  process.exit(0);
+  process.exit(1);
 }
 
 // ------------------------------------------------
@@ -456,7 +456,7 @@ inquirer
         `\n${answers.packageManager} is not installed on this machine.`,
       );
 
-      return;
+      process.exit(1);
     }
     const projectPath = path.join(process.cwd(), answers.projectName);
 
@@ -473,7 +473,7 @@ inquirer
           `\nSomething is already running on port ${answers.port}. Choose another port.`,
         );
 
-        return;
+        process.exit(1);
       }
     }
 
@@ -590,7 +590,7 @@ inquirer
         fs.writeFileSync(path.join(serverPath, ".env"), `PORT=${answers.port}`);
       } catch {
         console.log("\n Backend setup failed.");
-        return;
+        process.exit(1);
       }
     }
 
@@ -695,7 +695,7 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         }
       } catch {
         console.log("\n React setup failed.");
-        return;
+        process.exit(1);
       }
     }
 
@@ -725,7 +725,7 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
             shell,
           });
 
-          console.log(" Git repository initialized.");
+          console.log("Git repository initialized.");
         } else {
           console.log(`
 Git initialized successfully.
@@ -741,5 +741,5 @@ Git commit skipped because git user.name or user.email is not configured.
     // ------------------------------------------------
     // FINAL
     // ------------------------------------------------
-    console.log(`\n Project "${answers.projectName}" created successfully!`);
+    console.log(`\nProject "${answers.projectName}" created successfully!`);
   });

@@ -589,7 +589,7 @@ inquirer
 
         fs.writeFileSync(path.join(serverPath, ".env"), `PORT=${answers.port}`);
       } catch {
-        console.log("\n❌ Backend setup failed.");
+        console.log("\n Backend setup failed.");
         return;
       }
     }
@@ -694,7 +694,7 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
           fs.writeFileSync(path.join(clientPath, "src", "App.jsx"), appCode);
         }
       } catch {
-        console.log("\n❌ React setup failed.");
+        console.log("\n React setup failed.");
         return;
       }
     }
@@ -725,7 +725,7 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
             shell,
           });
 
-          console.log("✅ Git repository initialized.");
+          console.log(" Git repository initialized.");
         } else {
           console.log(`
 Git initialized successfully.
@@ -741,5 +741,5 @@ Git commit skipped because git user.name or user.email is not configured.
     // ------------------------------------------------
     // FINAL
     // ------------------------------------------------
-    console.log(`\n✅ Project "${answers.projectName}" created successfully!`);
+    console.log(`\n Project "${answers.projectName}" created successfully!`);
   });

@@ -25,7 +25,8 @@ test("isPortFree reports a port occupied by a listener", async () => {
   const server = net.createServer();
   await new Promise((resolve, reject) => {
     server.once("error", reject);
-    server.listen(0, "0.0.0.0", resolve);
+    // Use the same default bind address as isPortFree (IPv4/IPv6 differs by OS).
+    server.listen(0, resolve);
   });
   try {
     assert.equal(await helpers.isPortFree(server.address().port), false);

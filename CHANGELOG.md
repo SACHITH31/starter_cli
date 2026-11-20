@@ -2,6 +2,16 @@
 
 All notable changes to stack-starter-cli are documented here.
 
+## [1.3.2] - 2026-11-20
+
+### Documentation
+- Refresh the README with an improved quick start, feature overview, CLI reference, usage recipes, troubleshooting, and contributor guidance.
+- Add npm, CI, and compatibility badges and a text-based scaffolding workflow diagram.
+- Link directly to release notes and development resources.
+
+### Compatibility
+- Documentation-only patch release; no CLI behavior or dependency changes.
+
 ## [1.3.1] - 2026-11-20
 
 ### Improved

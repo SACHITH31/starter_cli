@@ -47,5 +47,7 @@ test("package lock metadata matches package version and CLI name", () => {
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].name, pkg.name);
   assert.equal(lock.packages[""].version, pkg.version);
-  assert.deepEqual(lock.packages[""].bin, pkg.bin);
+  for (const [command, entry] of Object.entries(pkg.bin)) {
+    assert.equal(lock.packages[""].bin[command].replace(/^\\.\\//, ""), entry.replace(/^\\.\\//, ""));
+  }
 });

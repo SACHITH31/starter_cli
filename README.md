@@ -6,7 +6,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/stack-starter-cli?logo=npm)](https://www.npmjs.com/package/stack-starter-cli)
 [![CI](https://github.com/SACHITH31/starter_cli/actions/workflows/cli-tests.yml/badge.svg)](https://github.com/SACHITH31/starter_cli/actions/workflows/cli-tests.yml)
 [![Node.js](https://img.shields.io/node/v/stack-starter-cli)](https://www.npmjs.com/package/stack-starter-cli)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://www.npmjs.com/package/stack-starter-cli)
 
 **React + Vite · HTML/CSS/JavaScript · Node.js + Express · Optional TypeScript**
 
@@ -231,4 +231,4 @@ The project runs CLI tests on Windows and Ubuntu with Node.js 20 and 22, alongsi
 
 ## License
 
-[MIT](LICENSE)
+MIT (as declared in `package.json`).

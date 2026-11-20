@@ -400,6 +400,7 @@ inquirer
     if (answers.frontend === "HTML / CSS / JavaScript") {
       const clientPath = path.join(projectPath, "client");
 
+      try {
       fs.mkdirSync(clientPath);
 
       copyTemplate(
@@ -427,6 +428,11 @@ inquirer
           `document.getElementById("status").textContent = "Standalone";
 document.getElementById("message").textContent = "No backend selected. Frontend is ready.";`,
         );
+      }
+      } catch (error) {
+        fs.rmSync(projectPath, { recursive: true, force: true });
+        console.error("\\nHTML setup failed; incomplete project removed.", error.message);
+        process.exit(1);
       }
     }
 

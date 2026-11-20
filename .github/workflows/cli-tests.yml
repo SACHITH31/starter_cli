@@ -6,6 +6,18 @@ on:
   pull_request:
 
 jobs:
+  syntax:
+    name: JavaScript syntax validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check CLI and test JavaScript syntax
+        run: |
+          find bin test -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
   test:
     strategy:
       fail-fast: false

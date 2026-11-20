@@ -89,7 +89,7 @@ test("React plus backend scaffold substitutes the chosen port", () => withSandbo
 }));
 
 test("backend install failure removes incomplete project", () => withSandbox((root, bin) => {
-  const result = run(root, bin, ["failed-app", "--node", "--pm", "npm"], { MOCK_FAIL_INSTALL: "1" });
+  const result = run(root, bin, ["failed-app", "--node", "--port", "43212", "--pm", "npm"], { MOCK_FAIL_INSTALL: "1" });
   assert.equal(result.status, 1, result.stderr + result.stdout);
   assert.match(result.stderr + result.stdout, /incomplete project removed/);
   assert.ok(!fs.existsSync(path.join(root, "failed-app")));

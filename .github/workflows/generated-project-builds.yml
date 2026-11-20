@@ -1,6 +1,8 @@
 name: Generated project build smoke tests
 
 on:
+  push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 

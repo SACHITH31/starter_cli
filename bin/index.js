@@ -188,7 +188,7 @@ if (useNode && !useReact && !useHtml) {
 // PROMPT
 // ------------------------------------------------
 inquirer
-  .prompt(createQuestions({ cliProjectName, cliPreset, cliFrontend, cliBackend, cliPort, cliPackageManager })))
+  .prompt(createQuestions({ cliProjectName, cliPreset, cliFrontend, cliBackend, cliPort, cliPackageManager }))
 
   .then(async (answers) => {
     if (cliProjectName) answers.projectName = cliProjectName;

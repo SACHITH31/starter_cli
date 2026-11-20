@@ -39,3 +39,13 @@ for (const [name, args, expected] of [
     assert.match(result.stdout + result.stderr, expected);
   });
 }
+
+test("package lock metadata matches package version and CLI name", () => {
+  const pkg = require("../package.json");
+  const lock = require("../package-lock.json");
+  assert.equal(lock.name, pkg.name);
+  assert.equal(lock.version, pkg.version);
+  assert.equal(lock.packages[""].name, pkg.name);
+  assert.equal(lock.packages[""].version, pkg.version);
+  assert.deepEqual(lock.packages[""].bin, pkg.bin);
+});

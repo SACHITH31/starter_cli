@@ -28,7 +28,7 @@ if (args[0] === "create" && args.some(a => a.startsWith("vite"))) {
   const dir = path.join(process.cwd(), "client");
   fs.mkdirSync(path.join(dir, "src"), { recursive: true });
   fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ scripts: { build: "vite build" } }));
-  fs.writeFileSync(path.join(dir, "src", "App.jsx"), "export default function App() { return null; }");
+  fs.writeFileSync(path.join(dir, "src", args.includes("react-ts") ? "App.tsx" : "App.jsx"), "export default function App() { return null; }");
   process.exit(0);
 }
 console.error("Unexpected npm invocation", args);
@@ -102,4 +102,32 @@ test("existing project is never overwritten", () => withSandbox((root, bin) => {
   const result = run(root, bin, ["existing", "--html", "--pm", "npm"]);
   assert.equal(result.status, 1);
   assert.equal(fs.readFileSync(path.join(project, "sentinel.txt"), "utf8"), "preserve me");
+}));
+
+test("TypeScript React + Express scaffold creates TS sources and build config", () => withSandbox((root, bin) => {
+  const result = run(root, bin, ["typed-app", "--react", "--node", "--ts", "--port", "43213", "--pm", "npm"]);
+  assert.equal(result.status, 0, result.stderr + result.stdout);
+  const project = path.join(root, "typed-app");
+  const app = fs.readFileSync(path.join(project, "client", "src", "App.tsx"), "utf8");
+  assert.match(app, /43213/);
+  assert.ok(fs.existsSync(path.join(project, "server", "src", "index.ts")));
+  assert.ok(fs.existsSync(path.join(project, "server", "tsconfig.json")));
+  const pkg = JSON.parse(fs.readFileSync(path.join(project, "server", "package.json"), "utf8"));
+  assert.match(pkg.scripts.dev, /tsx/);
+  assert.match(pkg.scripts.build, /tsc/);
+  assert.ok(!fs.existsSync(path.join(project, "server", "index.js")));
+}));
+
+test("TypeScript backend-only scaffold creates server TypeScript files", () => withSandbox((root, bin) => {
+  const result = run(root, bin, ["typed-api", "--node", "--ts", "--port", "43214", "--pm", "npm"]);
+  assert.equal(result.status, 0, result.stderr + result.stdout);
+  assert.ok(fs.existsSync(path.join(root, "typed-api", "server", "src", "index.ts")));
+  assert.ok(!fs.existsSync(path.join(root, "typed-api", "client")));
+}));
+
+test("TypeScript flag rejects plain HTML templates", () => withSandbox((root, bin) => {
+  const result = run(root, bin, ["bad-html", "--html", "--ts", "--pm", "npm"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr + result.stdout, /not supported/);
+  assert.ok(!fs.existsSync(path.join(root, "bad-html")));
 }));

@@ -26,11 +26,13 @@ Usage:
   stack-starter my-app --preset frontend
   stack-starter my-app --preset backend
   stack-starter my-app --react --node --git
+  stack-starter my-app --react --node --ts
 
 Options:
   --help, -h       Show help
   --version, -v    Show version
   --react          Use React.js (Vite)
+  --ts             Use TypeScript with React and/or Node.js
   --html           Use HTML / CSS / JavaScript
   --node           Use Node.js (Express)
   --port           Custom backend port
@@ -55,6 +57,7 @@ const validFlags = [
   "--version",
   "-v",
   "--react",
+  "--ts",
   "--html",
   "--node",
   "--port",
@@ -103,6 +106,7 @@ if (positionalArgs.length > 1) {
 const cliProjectName = positionalArgs[0] || null;
 
 const useReact = process.argv.includes("--react");
+const useTypeScript = process.argv.includes("--ts");
 const useHtml = process.argv.includes("--html");
 const useNode = process.argv.includes("--node");
 const useGit = process.argv.includes("--git");
@@ -214,6 +218,11 @@ function isGitConfigured() {
 if (new Set(args.filter((arg) => valueFlags.has(arg))).size !==
     args.filter((arg) => valueFlags.has(arg)).length) {
   console.error("\nDo not repeat --port, --pm, or --preset.");
+  process.exit(1);
+}
+
+if (useTypeScript && useHtml) {
+  console.error("\n--ts is not supported with the plain HTML template. Use --react or --node.");
   process.exit(1);
 }
 
@@ -486,6 +495,10 @@ inquirer
       console.error("\nA project with this name already exists.");
       process.exit(1);
     }
+    if (useTypeScript && answers.frontend === "HTML / CSS / JavaScript") {
+      console.error("\n--ts is not supported with the plain HTML template.");
+      process.exit(1);
+    }
     if (answers.frontend === "None" && answers.backend === "None") {
       console.error("\nSelect at least one frontend or backend.");
       process.exit(1);
@@ -564,10 +577,9 @@ inquirer
 
         const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
-        pkg.scripts = {
-          start: "node index.js",
-          dev: "nodemon index.js",
-        };
+        pkg.scripts = useTypeScript
+          ? { start: "node dist/index.js", dev: "tsx watch src/index.ts", build: "tsc -p tsconfig.json" }
+          : { start: "node index.js", dev: "nodemon index.js" };
 
         fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
@@ -578,7 +590,7 @@ inquirer
             shell,
           });
 
-          execSync("npm install -D nodemon", {
+          execSync(useTypeScript ? "npm install -D typescript tsx @types/node @types/express @types/cors" : "npm install -D nodemon", {
             cwd: serverPath,
             stdio: "inherit",
             shell,
@@ -592,7 +604,7 @@ inquirer
             shell,
           });
 
-          execSync("yarn add -D nodemon", {
+          execSync(useTypeScript ? "yarn add -D typescript tsx @types/node @types/express @types/cors" : "yarn add -D nodemon", {
             cwd: serverPath,
             stdio: "inherit",
             shell,
@@ -606,17 +618,30 @@ inquirer
             shell,
           });
 
-          execSync("pnpm add -D nodemon", {
+          execSync(useTypeScript ? "pnpm add -D typescript tsx @types/node @types/express @types/cors" : "pnpm add -D nodemon", {
             cwd: serverPath,
             stdio: "inherit",
             shell,
           });
         }
 
-        copyTemplate(
-          path.join(__dirname, "..", "templates", "server", "index.js"),
-          path.join(serverPath, "index.js"),
-        );
+        if (useTypeScript) {
+          const srcPath = path.join(serverPath, "src");
+          fs.mkdirSync(srcPath);
+          copyTemplate(
+            path.join(__dirname, "..", "templates", "server", "index.ts"),
+            path.join(srcPath, "index.ts"),
+          );
+          copyTemplate(
+            path.join(__dirname, "..", "templates", "server", "tsconfig.json"),
+            path.join(serverPath, "tsconfig.json"),
+          );
+        } else {
+          copyTemplate(
+            path.join(__dirname, "..", "templates", "server", "index.js"),
+            path.join(serverPath, "index.js"),
+          );
+        }
 
         fs.writeFileSync(path.join(serverPath, ".env"), `PORT=${answers.port}`);
       } catch (error) {
@@ -672,9 +697,10 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
 
       try {
         const pm = answers.packageManager;
+        const viteTemplate = useTypeScript ? "react-ts" : "react";
 
         if (pm === "npm") {
-          execSync("npm create vite@latest client --yes -- --template react", {
+          execSync(`npm create vite@latest client --yes -- --template ${viteTemplate}`, {
             cwd: projectPath,
             stdio: "inherit",
             shell,
@@ -688,7 +714,7 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         }
 
         if (pm === "yarn") {
-          execSync("yarn create vite client --template react", {
+          execSync(`yarn create vite client --template ${viteTemplate}`, {
             cwd: projectPath,
             stdio: "inherit",
             shell,
@@ -702,7 +728,7 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
         }
 
         if (pm === "pnpm") {
-          execSync("pnpm create vite client --template react", {
+          execSync(`pnpm create vite client --template ${viteTemplate}`, {
             cwd: projectPath,
             stdio: "inherit",
             shell,
@@ -717,13 +743,13 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
 
         if (answers.backend === "Node.js (Express)") {
           let appCode = fs.readFileSync(
-            path.join(__dirname, "..", "templates", "react", "App.jsx"),
+            path.join(__dirname, "..", "templates", "react", useTypeScript ? "App.tsx" : "App.jsx"),
             "utf8",
           );
 
           appCode = appCode.replace(/5000/g, answers.port);
 
-          fs.writeFileSync(path.join(clientPath, "src", "App.jsx"), appCode);
+          fs.writeFileSync(path.join(clientPath, "src", useTypeScript ? "App.tsx" : "App.jsx"), appCode);
         }
       } catch (error) {
         fs.rmSync(projectPath, { recursive: true, force: true });

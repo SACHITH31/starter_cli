@@ -131,3 +131,23 @@ test("TypeScript flag rejects plain HTML templates", () => withSandbox((root, bi
   assert.match(result.stderr + result.stdout, /not supported/);
   assert.ok(!fs.existsSync(path.join(root, "bad-html")));
 }));
+
+
+test("HTML template read failure removes incomplete project", () => withSandbox((root, bin) => {
+  const preload = path.join(root, "fail-template.js");
+  fs.writeFileSync(preload, [
+    'const fs = require("node:fs");',
+    'const original = fs.readFileSync;',
+    'fs.readFileSync = function(file, ...args) {',
+    '  if (typeof file === "string" && file.endsWith(path.sep + "templates" + path.sep + "html" + path.sep + "style.css")) throw new Error("Simulated template read failure");',
+    '  return original.call(this, file, ...args);',
+    '};',
+    'const path = require("node:path");',
+  ].join("\n"));
+  const result = run(root, bin, ["broken-html", "--html", "--pm", "npm"], {
+    NODE_OPTIONS: [process.env.NODE_OPTIONS, "--require", preload].filter(Boolean).join(" "),
+  });
+  assert.equal(result.status, 1, result.stderr + result.stdout);
+  assert.match(result.stderr + result.stdout, /HTML setup failed; incomplete project removed/);
+  assert.ok(!fs.existsSync(path.join(root, "broken-html")));
+}));

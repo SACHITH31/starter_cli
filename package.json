@@ -1,6 +1,6 @@
 {
   "name": "stack-starter-cli",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "CLI tool to quickly scaffold HTML, React, and Node.js starter projects.",
   "main": "bin/index.js",
   "bin": {

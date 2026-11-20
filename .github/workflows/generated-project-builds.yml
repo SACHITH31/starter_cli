@@ -1,0 +1,66 @@
+name: Generated project build smoke tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generated-projects:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install CLI dependencies
+        run: npm ci
+      - name: Generate and build TypeScript React app
+        run: |
+          mkdir -p "$RUNNER_TEMP/starter-smoke"
+          cd "$RUNNER_TEMP/starter-smoke"
+          node "$GITHUB_WORKSPACE/bin/index.js" typed-react --react --ts --pm npm
+          cd typed-react/client
+          npm run build
+          test -f dist/index.html
+      - name: Generate and build TypeScript Express app
+        run: |
+          cd "$RUNNER_TEMP/starter-smoke"
+          node "$GITHUB_WORKSPACE/bin/index.js" typed-api --node --ts --port 43101 --pm npm
+          cd typed-api/server
+          npm run build
+          test -f dist/index.js
+      - name: Generate and build fullstack TypeScript app
+        run: |
+          cd "$RUNNER_TEMP/starter-smoke"
+          node "$GITHUB_WORKSPACE/bin/index.js" typed-fullstack --react --node --ts --port 43102 --pm npm
+          cd typed-fullstack/client
+          npm run build
+          test -f dist/index.html
+          cd ../server
+          npm run build
+          test -f dist/index.js
+      - name: Generate and build existing JavaScript React app
+        run: |
+          cd "$RUNNER_TEMP/starter-smoke"
+          node "$GITHUB_WORKSPACE/bin/index.js" js-react --react --pm npm
+          cd js-react/client
+          npm run build
+          test -f dist/index.html
+      - name: Generate and check existing JavaScript Express app
+        run: |
+          cd "$RUNNER_TEMP/starter-smoke"
+          node "$GITHUB_WORKSPACE/bin/index.js" js-api --node --port 43103 --pm npm
+          node --check js-api/server/index.js
+          test -f js-api/server/package.json
+      - name: Generate and verify existing plain HTML app
+        run: |
+          cd "$RUNNER_TEMP/starter-smoke"
+          node "$GITHUB_WORKSPACE/bin/index.js" html-app --html --pm npm
+          test -f html-app/client/index.html
+          test -f html-app/client/script.js
+          test -f html-app/client/style.css

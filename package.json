@@ -12,7 +12,8 @@
     "README.md"
   ],
   "scripts": {
-    "start": "node bin/index.js"
+    "start": "node bin/index.js",
+    "test": "node --test"
   },
   "keywords": [
     "cli",

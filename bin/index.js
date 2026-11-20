@@ -83,8 +83,24 @@ Use --help to see available options.
 // ------------------------------------------------
 // CLI FLAGS
 // ------------------------------------------------
-const cliProjectName =
-  process.argv[2] && !process.argv[2].startsWith("-") ? process.argv[2] : null;
+const args = process.argv.slice(2);
+const valueFlags = new Set(["--port", "--pm", "--preset"]);
+const positionalArgs = [];
+for (let i = 0; i < args.length; i++) {
+  if (valueFlags.has(args[i])) {
+    // Consume only a genuine value, not the next option.
+    if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+      i++;
+    }
+  } else if (!args[i].startsWith("-")) {
+    positionalArgs.push(args[i]);
+  }
+}
+if (positionalArgs.length > 1) {
+  console.error("\nProvide only one project name.");
+  process.exit(1);
+}
+const cliProjectName = positionalArgs[0] || null;
 
 const useReact = process.argv.includes("--react");
 const useHtml = process.argv.includes("--html");
@@ -195,6 +211,12 @@ function isGitConfigured() {
 // ------------------------------------------------
 // EARLY VALIDATION
 // ------------------------------------------------
+if (new Set(args.filter((arg) => valueFlags.has(arg))).size !==
+    args.filter((arg) => valueFlags.has(arg)).length) {
+  console.error("\nDo not repeat --port, --pm, or --preset.");
+  process.exit(1);
+}
+
 if (useReact && useHtml) {
   console.log("\nYou cannot use --react and --html together.");
   process.exit(1);
@@ -459,6 +481,15 @@ inquirer
       process.exit(1);
     }
     const projectPath = path.join(process.cwd(), answers.projectName);
+    // A directory may have appeared while the user was answering prompts.
+    if (fs.existsSync(projectPath)) {
+      console.error("\nA project with this name already exists.");
+      process.exit(1);
+    }
+    if (answers.frontend === "None" && answers.backend === "None") {
+      console.error("\nSelect at least one frontend or backend.");
+      process.exit(1);
+    }
 
     // ------------------------------------------------
     // PORT CHECK
@@ -588,8 +619,9 @@ inquirer
         );
 
         fs.writeFileSync(path.join(serverPath, ".env"), `PORT=${answers.port}`);
-      } catch {
-        console.log("\n Backend setup failed.");
+      } catch (error) {
+        fs.rmSync(projectPath, { recursive: true, force: true });
+        console.error("\nBackend setup failed; incomplete project removed.", error.message);
         process.exit(1);
       }
     }
@@ -693,8 +725,9 @@ document.getElementById("message").textContent = "No backend selected. Frontend 
 
           fs.writeFileSync(path.join(clientPath, "src", "App.jsx"), appCode);
         }
-      } catch {
-        console.log("\n React setup failed.");
+      } catch (error) {
+        fs.rmSync(projectPath, { recursive: true, force: true });
+        console.error("\nReact setup failed; incomplete project removed.", error.message);
         process.exit(1);
       }
     }

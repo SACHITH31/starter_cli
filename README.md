@@ -1,299 +1,83 @@
-# stack-starter
+# stack-starter-cli
 
-A simple project scaffolding CLI for creating frontend, backend, and fullstack starter projects fast.
+**Scaffold a frontend, backend, or full-stack project from your terminal.**
 
-Use it when you want a clean React, HTML, Node.js, or fullstack setup without copying the same files again and again.
+[![npm version](https://img.shields.io/npm/v/stack-starter-cli?logo=npm)](https://www.npmjs.com/package/stack-starter-cli)
+[![npm downloads](https://img.shields.io/npm/dm/stack-starter-cli?logo=npm)](https://www.npmjs.com/package/stack-starter-cli)
+[![CI](https://github.com/SACHITH31/starter_cli/actions/workflows/cli-tests.yml/badge.svg)](https://github.com/SACHITH31/starter_cli/actions/workflows/cli-tests.yml)
+[![Node.js](https://img.shields.io/node/v/stack-starter-cli)](https://www.npmjs.com/package/stack-starter-cli)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://www.npmjs.com/package/stack-starter-cli)
 
----
+**React + Vite · HTML/CSS/JavaScript · Node.js + Express · Optional TypeScript**
 
-## Features
+stack-starter-cli is an interactive and flag-driven project generator for quickly starting small apps, APIs, and full-stack projects. Choose the pieces you need, select npm, yarn, or pnpm, and optionally initialize Git.
 
-| Feature | Included |
-| --- | --- |
-| React frontend | Vite + React starter |
-| TypeScript (opt-in) | React + Vite and/or Express backend with `--ts` |
-| HTML frontend | HTML, CSS, and JavaScript starter |
-| Node backend | Express server with CORS and dotenv |
-| Fullstack setup | Frontend and backend in one project |
-| Package managers | npm, yarn, and pnpm |
-| Custom backend port | `--port` option |
-| Git setup | Optional `git init` and first commit |
-| Presets | Quick frontend, backend, and fullstack modes |
+[**Get started**](#quick-start) · [**Examples**](#common-recipes) · [**CLI reference**](#cli-reference) · [**Contributing**](#development--contributing) · [**Releases**](https://github.com/SACHITH31/starter_cli/releases)
 
----
+> **Current release:** v1.3.1 — maintenance, reliability, testing, and secure release-workflow improvements. [Read the release notes](https://github.com/SACHITH31/starter_cli/releases/tag/v1.3.1).
 
-## Installation
+## Quick start
 
-Install globally:
+**Requirements:** Node.js **20.19.0 or newer**, and the package manager you intend to use. Git is optional.
+
+Run without a global installation:
+
+```bash
+npx stack-starter-cli@latest
+```
+
+Or install globally:
 
 ```bash
 npm install -g stack-starter-cli
-```
-
-Then run:
-
-```bash
 stack-starter
 ```
 
----
-
-## Usage
-
-Start in interactive mode:
-
-```bash
-stack-starter
-```
-
-Create a project and answer the remaining questions:
-
-```bash
-stack-starter my-app
-```
-
-Create a project directly with flags:
-
-```bash
-stack-starter my-app --react --node --pm pnpm --git
-```
-
----
-
-## Command Examples
-
-### TypeScript projects
-
-Use `--ts` with React and/or Node.js. JavaScript remains the default. Plain HTML templates do not support `--ts`.
-
-```bash
-stack-starter typed-web --react --ts --pm npm
-stack-starter typed-api --node --ts --port 8000 --pm npm
-stack-starter typed-fullstack --react --node --ts --port 8000 --pm npm
-```
-
-TypeScript React projects use Vite's `react-ts` template. TypeScript Express projects include `server/src/index.ts`, `server/tsconfig.json`, and `dev`/`build`/`start` scripts (`tsx`, `tsc`, and compiled Node output). Run `npm run build` in `server/` before `npm start`.
-
-### React only
-
-```bash
-stack-starter my-react-app --react
-```
-
-### Backend only
-
-```bash
-stack-starter my-api --node
-```
-
-### Fullstack
-
-```bash
-stack-starter my-fullstack-app --react --node
-```
-
-### HTML frontend with backend
-
-```bash
-stack-starter my-site --html --node
-```
-
-### Custom backend port
-
-```bash
-stack-starter my-api --node --port 8000
-```
-
-### Git initialization
-
-```bash
-stack-starter my-app --react --node --git
-```
-
-### pnpm usage
-
-```bash
-stack-starter my-app --react --node --pm pnpm
-```
-
-### yarn usage
-
-```bash
-stack-starter my-app --react --node --pm yarn
-```
-
-### Presets
-
-```bash
-stack-starter my-app --preset fullstack
-stack-starter my-app --preset frontend
-stack-starter my-app --preset backend
-```
-
----
-
-## Available Flags
-
-| Flag | Description | Example |
-| --- | --- | --- |
-| `--ts` | Use TypeScript for React and/or Express | `stack-starter app --react --node --ts` |
-| `--react` | Create a React.js frontend with Vite | `stack-starter app --react` |
-| `--html` | Create an HTML/CSS/JavaScript frontend | `stack-starter app --html` |
-| `--node` | Create a Node.js Express backend | `stack-starter app --node` |
-| `--port` | Set the backend port | `stack-starter app --node --port 8000` |
-| `--pm` | Choose `npm`, `yarn`, or `pnpm` | `stack-starter app --pm pnpm` |
-| `--git` | Initialize Git after project creation | `stack-starter app --git` |
-| `--preset` | Use `fullstack`, `frontend`, or `backend` | `stack-starter app --preset fullstack` |
-| `--help` | Show help | `stack-starter --help` |
-| `--version` | Show package version | `stack-starter --version` |
-
-Unknown flags stop the CLI before prompts start:
-
-```bash
-stack-starter app --randomFlag
-```
-
-Output:
-
-```text
-Invalid flag(s):
---randomFlag
-```
-
----
-
-## Presets
-
-Presets are quick setup modes.
-
-| Preset | What it does |
-| --- | --- |
-| `fullstack` | Lets you choose React + Node.js or HTML + Node.js |
-| `frontend` | Lets you choose React or HTML |
-| `backend` | Creates a Node.js Express backend |
-
-Examples:
-
-```bash
-stack-starter my-app --preset fullstack
-stack-starter my-site --preset frontend
-stack-starter my-api --preset backend
-```
-
----
-
-## Generated Project Structure Examples
-
-### React + Node.js
-
-```text
-my-app/
-  client/
-    src/
-    package.json
-  server/
-    index.js
-    .env
-    package.json
-  .gitignore
-  README.md
-```
-
-### HTML + Node.js
-
-```text
-my-app/
-  client/
-    index.html
-    style.css
-    script.js
-  server/
-    index.js
-    .env
-    package.json
-  .gitignore
-  README.md
-```
-
-### Backend only
-
-```text
-my-api/
-  server/
-    index.js
-    .env
-    package.json
-  .gitignore
-  README.md
-```
-
----
-
-## Package Manager Support
-
-Choose your package manager with `--pm`.
+To start a named React + Express project:
 
 ```bash
 stack-starter my-app --react --node --pm npm
-stack-starter my-app --react --node --pm yarn
-stack-starter my-app --react --node --pm pnpm
 ```
 
-Backend initialization uses the selected package manager:
+> The npm package is named `stack-starter-cli`; the installed executable is `stack-starter`.
 
-> Use the same package manager to run the project later.
+## What you can build
 
-### npm
-
-```bash
-npm run dev
-```
-
-### yarn
-
-```bash
-yarn dev
-```
-
-### pnpm
-
-```bash
-pnpm dev
-```
-
-| Package manager | Backend init | Install dependencies |
+| Project | Stack | Example |
 | --- | --- | --- |
-| npm | `npm init -y` | `npm install` |
-| yarn | `yarn init -y` | `yarn add` |
-| pnpm | `pnpm init` | `pnpm add` |
+| React app | Vite + React | `stack-starter web --react` |
+| TypeScript React app | Vite + React + TypeScript | `stack-starter web --react --ts` |
+| Static website | HTML + CSS + JavaScript | `stack-starter site --html` |
+| Express API | Node.js + Express | `stack-starter api --node` |
+| TypeScript API | Express + TypeScript | `stack-starter api --node --ts` |
+| Full-stack app | React or HTML frontend + Express backend | `stack-starter app --react --node` |
 
-React projects are also created and installed with the selected package manager.
+**Additional capabilities:** interactive questions, `frontend` / `backend` / `fullstack` presets, configurable backend port, npm/yarn/pnpm selection, and optional Git initialization.
 
----
+## How scaffolding works
 
-## Git Support
-
-Add `--git` to initialize a Git repository:
-
-```bash
-stack-starter my-app --react --node --git
+```text
+  stack-starter [project-name] [options]
+                  |
+          Choose a project type
+          (flags or prompts)
+                  |
+          Select a package manager
+                  |
+       Generate client and/or server
+                  |
+        Install required dependencies
+                  |
+         Optional Git initialization
+                  |
+          Your project is ready
 ```
 
-The CLI will run:
+This diagram illustrates the typical workflow; steps depend on the chosen template and options.
 
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-```
+## Common recipes
 
-If Git is installed but `user.name` or `user.email` is missing, the repository is still initialized and the commit is skipped.
-
----
-
-## Example Workflows
-
-### Build a React app with npm
+### React frontend
 
 ```bash
 stack-starter dashboard --react --pm npm
@@ -301,59 +85,150 @@ cd dashboard/client
 npm run dev
 ```
 
-### Build a React app with yarn
+### TypeScript React frontend
 
 ```bash
-stack-starter dashboard --react --pm yarn
-cd dashboard/client
-yarn dev
+stack-starter typed-web --react --ts --pm npm
+cd typed-web/client
+npm run dev
 ```
 
-
-### Build an Express API
+### Express API
 
 ```bash
-stack-starter api-server --node --port 8000 --pm pnpm
+stack-starter api-server --node --port 8000 --pm npm
 cd api-server/server
-pnpm dev
+npm run dev
 ```
 
-### Build a fullstack app with Git
+### TypeScript Express API
 
 ```bash
-stack-starter product-app --react --node --pm yarn --git
-cd product-app
+stack-starter typed-api --node --ts --port 8000 --pm npm
+cd typed-api/server
+npm run dev
 ```
 
----
+For a production-style TypeScript server run, build first:
 
-## Why use stack-starter?
+```bash
+npm run build
+npm start
+```
 
-- Start projects quickly
-- Keep frontend and backend folders organized
-- Choose the package manager you already use
-- Avoid repeating the same setup steps
-- Good for beginners, practice projects, and quick prototypes
+### Full-stack project
 
----
+```bash
+stack-starter product-app --react --node --pm pnpm --git
+```
 
-## Contributing
+The frontend and backend live in separate `client/` and `server/` directories. Start each component from its own directory using the scripts generated for that component.
 
-Contributions are welcome.
+### Plain HTML + Express
 
-To work locally:
+```bash
+stack-starter landing-app --html --node
+```
+
+### Interactive presets
+
+```bash
+stack-starter my-app --preset fullstack
+stack-starter my-site --preset frontend
+stack-starter my-api --preset backend
+```
+
+Presets streamline the questions; `fullstack` can use React or HTML, `frontend` can use React or HTML, and `backend` uses Express.
+
+## CLI reference
+
+| Option | Purpose |
+| --- | --- |
+| `--react` | Scaffold a React frontend using Vite |
+| `--html` | Scaffold an HTML/CSS/JavaScript frontend |
+| `--node` | Scaffold an Express backend |
+| `--ts` | Use TypeScript with React and/or Express |
+| `--pm npm\|yarn\|pnpm` | Select a package manager |
+| `--port <number>` | Configure the backend port |
+| `--git` | Initialize a Git repository and attempt an initial commit |
+| `--preset frontend\|backend\|fullstack` | Choose a guided setup preset |
+| `--help` | Display CLI help |
+| `--version` | Display installed CLI version |
+
+**Defaults and constraints**
+
+- JavaScript is the default. `--ts` is supported with React and/or Express, **not** the plain HTML template.
+- Running `stack-starter` with no arguments starts the interactive flow.
+- Unknown flags are rejected rather than silently ignored.
+- A Git commit may be skipped when Git author identity is not configured.
+
+For exact options in your installed version, run:
+
+```bash
+stack-starter --help
+```
+
+## Generated layout
+
+A typical JavaScript React + Express project has the following structure (the exact files vary by template):
+
+```text
+my-app/
+├── client/
+│   ├── src/
+│   └── package.json
+├── server/
+│   ├── index.js
+│   ├── .env
+│   └── package.json
+├── .gitignore
+└── README.md
+```
+
+For TypeScript Express projects, the server includes `src/index.ts` and `tsconfig.json`, with scripts for development, compilation, and running the compiled output.
+
+## Package managers
+
+Choose `--pm npm`, `--pm yarn`, or `--pm pnpm`. The CLI uses your selected manager to initialize and install the generated project dependencies. Make sure it is installed and available on your `PATH`.
+
+Run the generated project's commands from the relevant `client/` or `server/` directory, using the package manager you selected.
+
+## Troubleshooting
+
+| Issue | What to check |
+| --- | --- |
+| `stack-starter` is not recognized | Use `npx stack-starter-cli@latest` or verify your global npm binary directory is on `PATH` |
+| Node version is unsupported | Install Node.js 20.19.0 or newer |
+| `yarn` or `pnpm` command is missing | Install that package manager or use `--pm npm` |
+| Git commit was skipped | Configure `git config user.name` and `git config user.email` |
+| TypeScript requested for HTML | Use `--react --ts` or `--node --ts` instead |
+
+If an error persists, [open an issue](https://github.com/SACHITH31/starter_cli/issues) with your operating system, Node.js version, command, and the error output. Remove credentials and private paths before sharing logs.
+
+## Development & contributing
+
+Contributions, bug reports, and documentation improvements are welcome.
 
 ```bash
 git clone https://github.com/SACHITH31/starter_cli.git
 cd starter_cli
-npm install
+npm ci
+npm test
 npm start
 ```
 
-Please keep changes simple, readable, and focused.
+Please open an issue for larger proposals before investing significant time. Keep pull requests focused and include tests for behavior changes.
 
----
+The project runs CLI tests on Windows and Ubuntu with Node.js 20 and 22, alongside JavaScript syntax checks, formatting hygiene, generated-project smoke tests, and package verification. [See CI](https://github.com/SACHITH31/starter_cli/actions).
+
+## Releases & security
+
+- [Changelog](CHANGELOG.md) · [GitHub releases](https://github.com/SACHITH31/starter_cli/releases) · [npm package](https://www.npmjs.com/package/stack-starter-cli)
+- Releases use npm Trusted Publishing (OIDC) and a staged review/approval process.
+- To report a security concern, avoid publishing sensitive details in a public issue; contact the maintainer privately through an appropriate GitHub channel.
+
+**Maintainer:** [@SACHITH31](https://github.com/SACHITH31)
 
 ## License
 
-MIT
+MIT (as declared in `package.json`).

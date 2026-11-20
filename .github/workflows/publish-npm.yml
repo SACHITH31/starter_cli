@@ -13,7 +13,6 @@ jobs:
     name: Publish verified release to npm
     if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
     runs-on: ubuntu-latest
-    environment: npm
     steps:
       - name: Check out release tag
         uses: actions/checkout@v4

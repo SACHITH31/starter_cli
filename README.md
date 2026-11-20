@@ -12,9 +12,13 @@
 
 stack-starter-cli is an interactive and flag-driven project generator for quickly starting small apps, APIs, and full-stack projects. Choose the pieces you need, select npm, yarn, or pnpm, and optionally initialize Git.
 
-[**Get started**](#quick-start) · [**Examples**](#common-recipes) · [**CLI reference**](#cli-reference) · [**Contributing**](#development--contributing) · [**Releases**](https://github.com/SACHITH31/starter_cli/releases)
+**[Get started](#quick-start) · [Examples](#common-recipes) · [CLI reference](#cli-reference) · [Contributing](#development--contributing) · [Releases](https://github.com/SACHITH31/starter_cli/releases)**
 
-> **Current release:** v1.3.1 — maintenance, reliability, testing, and secure release-workflow improvements. [Read the release notes](https://github.com/SACHITH31/starter_cli/releases/tag/v1.3.1).
+> **Current release: v1.3.2 — Documentation & Developer Experience Improvements.**
+>
+> This release introduces a professionally redesigned README, clearer installation instructions, practical scaffolding examples, a workflow diagram, and improved developer guidance.
+>
+> [Read the v1.3.2 release notes](https://github.com/SACHITH31/starter_cli/releases/tag/v1.3.2).
 
 ## Quick start
 
@@ -52,7 +56,7 @@ stack-starter my-app --react --node --pm npm
 | TypeScript API | Express + TypeScript | `stack-starter api --node --ts` |
 | Full-stack app | React or HTML frontend + Express backend | `stack-starter app --react --node` |
 
-**Additional capabilities:** interactive questions, `frontend` / `backend` / `fullstack` presets, configurable backend port, npm/yarn/pnpm selection, and optional Git initialization.
+**Additional capabilities:** Interactive questions, `frontend` / `backend` / `fullstack` presets, configurable backend port, npm/yarn/pnpm selection, and optional Git initialization.
 
 ## How scaffolding works
 
@@ -219,15 +223,30 @@ npm start
 
 Please open an issue for larger proposals before investing significant time. Keep pull requests focused and include tests for behavior changes.
 
-The project runs CLI tests on Windows and Ubuntu with Node.js 20 and 22, alongside JavaScript syntax checks, formatting hygiene, generated-project smoke tests, and package verification. [See CI](https://github.com/SACHITH31/starter_cli/actions).
+The project runs CLI tests on Windows and Ubuntu with Node.js 20 and 22, alongside JavaScript syntax checks, formatting hygiene, generated-project smoke tests, and package verification.
+
+[View CI workflows](https://github.com/SACHITH31/starter_cli/actions).
 
 ## Releases & security
 
-- [Changelog](CHANGELOG.md) · [GitHub releases](https://github.com/SACHITH31/starter_cli/releases) · [npm package](https://www.npmjs.com/package/stack-starter-cli)
-- Releases use npm Trusted Publishing (OIDC) and a staged review/approval process.
-- To report a security concern, avoid publishing sensitive details in a public issue; contact the maintainer privately through an appropriate GitHub channel.
+**Latest release: [v1.3.2 — Documentation & Developer Experience Improvements](https://github.com/SACHITH31/starter_cli/releases/tag/v1.3.2)**
 
-**Maintainer:** [@SACHITH31](https://github.com/SACHITH31)
+- [Changelog](CHANGELOG.md)
+- [All GitHub releases](https://github.com/SACHITH31/starter_cli/releases)
+- [npm package](https://www.npmjs.com/package/stack-starter-cli)
+- [Previous release — v1.3.1](https://github.com/SACHITH31/starter_cli/releases/tag/v1.3.1)
+
+Releases use npm Trusted Publishing (OIDC) and a staged review/approval process.
+
+To report a security concern, avoid publishing sensitive details in a public issue; contact the maintainer privately through an appropriate GitHub channel.
+
+## Maintainer
+
+**[@SACHITH31](https://github.com/SACHITH31)**
+
+Project maintenance, development, documentation, testing, CI/CD, and release management.
+
+Contributions and pull requests are welcome.
 
 ## License
 

@@ -1,0 +1,57 @@
+name: Publish npm package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish verified release to npm
+    if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+      - name: Set up Node.js and npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+      - name: Validate tag and package versions
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          node - <<'NODE'
+          const p = require('./package.json');
+          const lock = require('./package-lock.json');
+          const tag = process.env.RELEASE_TAG;
+          if (tag !== 'v' + p.version || lock.version !== p.version || lock.packages[''].version !== p.version) {
+            console.error('Release tag and package versions must match');
+            process.exit(1);
+          }
+          NODE
+      - name: Install and test
+        run: |
+          npm ci
+          npm test
+          node scripts/check-format.js
+          find bin test -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          npm pack --dry-run
+      - name: Ensure version is not already published
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "stack-starter-cli@$VERSION" version --json > /dev/null 2>&1; then
+            echo "Version $VERSION already exists on npm; refusing to republish."
+            exit 1
+          fi
+      - name: Publish with npm trusted publishing
+        run: npm publish --access public --provenance

@@ -88,7 +88,10 @@ const valueFlags = new Set(["--port", "--pm", "--preset"]);
 const positionalArgs = [];
 for (let i = 0; i < args.length; i++) {
   if (valueFlags.has(args[i])) {
-    i++;
+    // Consume only a genuine value, not the next option.
+    if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+      i++;
+    }
   } else if (!args[i].startsWith("-")) {
     positionalArgs.push(args[i]);
   }

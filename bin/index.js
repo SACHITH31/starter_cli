@@ -3,10 +3,10 @@
 const inquirer = require("inquirer").default;
 const fs = require("fs");
 const path = require("path");
-const net = require("net");
 const { execSync } = require("child_process");
 
 const packageJson = require("../package.json");
+const { createSystemHelpers } = require("./system-helpers");
 
 // ------------------------------------------------
 // HELP / VERSION
@@ -147,70 +147,7 @@ const shell =
 // ------------------------------------------------
 // HELPERS
 // ------------------------------------------------
-function copyTemplate(source, destination) {
-  const content = fs.readFileSync(source, "utf-8");
-  fs.writeFileSync(destination, content);
-}
-
-function isPackageManagerInstalled(pm) {
-  try {
-    execSync(`${pm} --version`, {
-      stdio: "ignore",
-      shell,
-    });
-
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function isGitInstalled() {
-  try {
-    execSync("git --version", {
-      stdio: "ignore",
-      shell,
-    });
-
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function isPortFree(port) {
-  return new Promise((resolve) => {
-    const server = net.createServer();
-
-    server.once("error", () => resolve(false));
-
-    server.once("listening", () => {
-      server.close(() => resolve(true));
-    });
-
-    server.listen(port);
-  });
-}
-
-function isGitConfigured() {
-  try {
-    const name = execSync("git config --global user.name", {
-      shell,
-    })
-      .toString()
-      .trim();
-
-    const email = execSync("git config --global user.email", {
-      shell,
-    })
-      .toString()
-      .trim();
-
-    return name && email;
-  } catch {
-    return false;
-  }
-}
+const { copyTemplate, isPackageManagerInstalled, isGitInstalled, isPortFree, isGitConfigured } = createSystemHelpers(shell);
 
 // ------------------------------------------------
 // EARLY VALIDATION

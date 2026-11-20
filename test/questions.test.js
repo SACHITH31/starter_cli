@@ -43,6 +43,6 @@ test("backend port prompt only appears when a port was not supplied", () => {
 
 test("frontend preset displays only preset selection", () => {
   const questions = createQuestions({ ...defaults, cliPreset: "frontend" });
-  assert.equal(question(questions, "presetChoice").when, true);
+  assert.equal(questions.filter((item) => item.name === "presetChoice" && item.when).length, 1);
   assert.equal(question(questions, "frontend").when, false);
 });

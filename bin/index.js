@@ -401,37 +401,37 @@ inquirer
       const clientPath = path.join(projectPath, "client");
 
       try {
-      fs.mkdirSync(clientPath);
+        fs.mkdirSync(clientPath);
 
-      copyTemplate(
-        path.join(__dirname, "..", "templates", "html", "index.html"),
-        path.join(clientPath, "index.html"),
-      );
-
-      copyTemplate(
-        path.join(__dirname, "..", "templates", "html", "style.css"),
-        path.join(clientPath, "style.css"),
-      );
-
-      if (answers.backend === "Node.js (Express)") {
-        let script = fs.readFileSync(
-          path.join(__dirname, "..", "templates", "html", "script.js"),
-          "utf8",
+        copyTemplate(
+          path.join(__dirname, "..", "templates", "html", "index.html"),
+          path.join(clientPath, "index.html"),
         );
 
-        script = script.replace(/5000/g, answers.port);
-
-        fs.writeFileSync(path.join(clientPath, "script.js"), script);
-      } else {
-        fs.writeFileSync(
-          path.join(clientPath, "script.js"),
-          `document.getElementById("status").textContent = "Standalone";
-document.getElementById("message").textContent = "No backend selected. Frontend is ready.";`,
+        copyTemplate(
+          path.join(__dirname, "..", "templates", "html", "style.css"),
+          path.join(clientPath, "style.css"),
         );
-      }
+
+        if (answers.backend === "Node.js (Express)") {
+          let script = fs.readFileSync(
+            path.join(__dirname, "..", "templates", "html", "script.js"),
+            "utf8",
+          );
+
+          script = script.replace(/5000/g, answers.port);
+
+          fs.writeFileSync(path.join(clientPath, "script.js"), script);
+        } else {
+          fs.writeFileSync(
+            path.join(clientPath, "script.js"),
+            `document.getElementById("status").textContent = "Standalone";
+  document.getElementById("message").textContent = "No backend selected. Frontend is ready.";`,
+          );
+        }
       } catch (error) {
         fs.rmSync(projectPath, { recursive: true, force: true });
-        console.error("\\nHTML setup failed; incomplete project removed.", error.message);
+        console.error("\nHTML setup failed; incomplete project removed.", error.message);
         process.exit(1);
       }
     }

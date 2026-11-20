@@ -1,4 +1,4 @@
-name: Publish npm package
+name: Stage npm package
 
 on:
   release:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   publish:
-    name: Publish verified release to npm
+    name: Stage verified release for npm approval
     if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +23,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Upgrade npm for staged publishing
+        run: npm install --global npm@latest
           registry-url: 'https://registry.npmjs.org'
           cache: npm
       - name: Validate tag and package versions
@@ -52,5 +54,5 @@ jobs:
             echo "Version $VERSION already exists on npm; refusing to republish."
             exit 1
           fi
-      - name: Publish with npm trusted publishing
-        run: npm publish --access public --provenance
+      - name: Stage with npm trusted publishing
+        run: npm stage publish --access public --provenance

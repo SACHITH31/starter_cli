@@ -11,6 +11,7 @@ Use it when you want a clean React, HTML, Node.js, or fullstack setup without co
 | Feature | Included |
 | --- | --- |
 | React frontend | Vite + React starter |
+| TypeScript (opt-in) | React + Vite and/or Express backend with `--ts` |
 | HTML frontend | HTML, CSS, and JavaScript starter |
 | Node backend | Express server with CORS and dotenv |
 | Fullstack setup | Frontend and backend in one project |
@@ -60,6 +61,18 @@ stack-starter my-app --react --node --pm pnpm --git
 ---
 
 ## Command Examples
+
+### TypeScript projects
+
+Use `--ts` with React and/or Node.js. JavaScript remains the default. Plain HTML templates do not support `--ts`.
+
+```bash
+stack-starter typed-web --react --ts --pm npm
+stack-starter typed-api --node --ts --port 8000 --pm npm
+stack-starter typed-fullstack --react --node --ts --port 8000 --pm npm
+```
+
+TypeScript React projects use Vite's `react-ts` template. TypeScript Express projects include `server/src/index.ts`, `server/tsconfig.json`, and `dev`/`build`/`start` scripts (`tsx`, `tsc`, and compiled Node output). Run `npm run build` in `server/` before `npm start`.
 
 ### React only
 
@@ -123,6 +136,7 @@ stack-starter my-app --preset backend
 
 | Flag | Description | Example |
 | --- | --- | --- |
+| `--ts` | Use TypeScript for React and/or Express | `stack-starter app --react --node --ts` |
 | `--react` | Create a React.js frontend with Vite | `stack-starter app --react` |
 | `--html` | Create an HTML/CSS/JavaScript frontend | `stack-starter app --html` |
 | `--node` | Create a Node.js Express backend | `stack-starter app --node` |
